@@ -5,91 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin | Freezing Point</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: { colors: { brand: '#e11d48', darkbg: '#09090b', panel: '#18181b' } } }
-        }
-    </script>
-</head>
-<body class="bg-darkbg text-white font-sans antialiased p-8">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
-    <div class="max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-extrabold text-white">Admin Dashboard</h1>
-            <button onclick="loadOrders()" class="bg-panel border border-zinc-700 px-4 py-2 rounded-lg text-sm hover:bg-zinc-800">Refresh <i class="fa-solid fa-rotate-right ml-2"></i></button>
+    <script>tailwind.config = { theme: { extend: { colors: { brand: '#e11d48', darkbg: '#09090b', panel: '#18181b' } } } }</script>
+</head>
+<body class="bg-darkbg text-white font-sans antialiased p-6">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <div class="flex justify-between items-center bg-panel p-6 rounded-2xl border border-zinc-800">
+            <div>
+                <h1 class="text-3xl font-extrabold">Live Orders Dashboard</h1>
+                <p class="text-green-500 text-sm flex items-center gap-2 mt-1">
+                    <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span> Connected to Firebase
+                </p>
+            </div>
         </div>
 
-        <div class="bg-panel border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="bg-panel border border-zinc-800 rounded-2xl p-6">
+            <h2 class="text-xl font-bold mb-4">📢 Global Coupon Manager</h2>
+            <div class="flex gap-4 items-end">
+                <div class="flex-1">
+                    <label class="text-xs text-gray-400 uppercase">Coupon Code</label>
+                    <input type="text" id="coupon-code" placeholder="e.g. MONSOON20" class="w-full bg-darkbg border border-zinc-700 rounded-lg px-4 py-2 text-white outline-none uppercase mt-1">
+                </div>
+                <div class="w-32">
+                    <label class="text-xs text-gray-400 uppercase">Discount (%)</label>
+                    <input type="number" id="coupon-percent" placeholder="20" class="w-full bg-darkbg border border-zinc-700 rounded-lg px-4 py-2 text-white outline-none mt-1">
+                </div>
+                <button onclick="setCoupon()" class="bg-brand text-white px-6 py-2 rounded-lg font-bold hover:bg-rose-700 h-[42px]">Go Live</button>
+                <button onclick="turnOffCoupon()" class="bg-zinc-700 text-white px-6 py-2 rounded-lg font-bold hover:bg-zinc-600 h-[42px]">Turn Off</button>
+            </div>
+            <p id="coupon-status" class="text-sm mt-3 text-brand font-bold"></p>
+        </div>
+
+        <div class="bg-panel border border-zinc-800 rounded-2xl overflow-hidden">
             <table class="w-full text-left">
-                <thead class="bg-zinc-900 border-b border-zinc-800 text-gray-400 text-sm uppercase tracking-wider">
+                <thead class="bg-zinc-800/50 text-xs uppercase tracking-wider text-gray-400 border-b border-zinc-800">
                     <tr>
                         <th class="p-4">Order ID</th>
                         <th class="p-4">Customer</th>
                         <th class="p-4">Items</th>
-                        <th class="p-4">Total (₹)</th>
+                        <th class="p-4">Total</th>
                         <th class="p-4">Status</th>
                         <th class="p-4 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="order-table" class="divide-y divide-zinc-800/50 text-sm">
-                    </tbody>
+                <tbody id="orders-list" class="divide-y divide-zinc-800/50">
+                    <tr><td colspan="6" class="p-8 text-center text-gray-500">Listening for live orders...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        function loadOrders() {
-            const table = document.getElementById('order-table');
-            let orders = JSON.parse(localStorage.getItem('fp_orders')) || [];
+        // 1. Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBI4yw5_LCfrPqVZSMqKlvxhzjOT-Ym18I",
+            authDomain: "freezingpoint-ba86d.firebaseapp.com",
+            projectId: "freezingpoint-ba86d",
+            storageBucket: "freezingpoint-ba86d.firebasestorage.app",
+            messagingSenderId: "70138777670",
+            appId: "1:70138777670:web:610674abe5efa20c46fa47"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-            if (orders.length === 0) {
-                table.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">No orders yet. Go to the customer page to place an order!</td></tr>`;
+        // 2. Fetch Live Orders
+        db.collection("orders").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+            const list = document.getElementById('orders-list');
+            if(snapshot.empty) {
+                list.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">No orders yet.</td></tr>`;
                 return;
             }
 
-            table.innerHTML = orders.map(order => `
-                <tr class="hover:bg-zinc-800/30 transition">
-                    <td class="p-4 text-gray-400 text-xs font-mono">${order.id}</td>
-                    <td class="p-4">
-                        <div class="font-bold text-white">${order.customer}</div>
-                        <div class="text-gray-500 text-xs">${order.phone}</div>
-                    </td>
-                    <td class="p-4 text-gray-300 max-w-xs truncate">${order.items}</td>
-                    <td class="p-4 font-bold text-brand">₹${order.total}</td>
-                    <td class="p-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold ${
-                            order.status === 'PENDING' ? 'bg-orange-500/20 text-orange-400' :
-                            order.status === 'PREPARING' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-green-500/20 text-green-400'
-                        }">
-                            ${order.status}
-                        </span>
-                    </td>
-                    <td class="p-4 text-right">
-                        ${order.status === 'PENDING' ? 
-                            `<button onclick="updateStatus('${order.id}', 'PREPARING')" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">Prepare</button>` : 
-                        order.status === 'PREPARING' ? 
-                            `<button onclick="updateStatus('${order.id}', 'COMPLETED')" class="bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">Complete</button>` : 
-                            `<span class="text-gray-500 text-xs"><i class="fa-solid fa-check"></i> Done</span>`
-                        }
-                    </td>
-                </tr>
-            `).join('');
-        }
+            let html = '';
+            snapshot.forEach((doc) => {
+                const order = doc.data();
+                
+                let statusBadge = '';
+                if(order.status === 'PENDING') statusBadge = '<span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-500/20">NEW ORDER</span>';
+                if(order.status === 'PREPARING') statusBadge = '<span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-xs font-bold border border-yellow-500/20">PREPARING</span>';
+                if(order.status === 'READY') statusBadge = '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/20">READY</span>';
 
-        function updateStatus(id, newStatus) {
-            let orders = JSON.parse(localStorage.getItem('fp_orders')) || [];
-            let orderIndex = orders.findIndex(o => o.id === id);
-            if (orderIndex > -1) {
-                orders[orderIndex].status = newStatus;
-                localStorage.setItem('fp_orders', JSON.stringify(orders));
-                loadOrders(); // Refresh table
+                let actionBtn = '';
+                if(order.status === 'PENDING') actionBtn = `<button onclick="updateStatus('${doc.id}', 'PREPARING')" class="bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold px-4 py-2 rounded-lg">Accept & Prepare</button>`;
+                if(order.status === 'PREPARING') actionBtn = `<button onclick="updateStatus('${doc.id}', 'READY')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2 rounded-lg">Mark Ready & Text</button>`;
+
+                html += `
+                    <tr class="hover:bg-zinc-800/20 transition">
+                        <td class="p-4 font-mono text-sm text-gray-400">#${order.id}</td>
+                        <td class="p-4">
+                            <p class="font-bold text-white">${order.customer}</p>
+                            <p class="text-xs text-gray-500">${order.phone}</p>
+                        </td>
+                        <td class="p-4 text-sm text-gray-300 max-w-xs">${order.items}</td>
+                        <td class="p-4 font-bold text-brand">₹${order.total}</td>
+                        <td class="p-4">${statusBadge}</td>
+                        <td class="p-4 text-right">${actionBtn}</td>
+                    </tr>
+                `;
+            });
+            list.innerHTML = html;
+            
+        });
+
+        // 3. Update Order Status
+        window.updateStatus = async function(docId, newStatus) {
+            await db.collection("orders").doc(docId).update({ status: newStatus });
+            
+            if(newStatus === 'READY') {
+                // Fetch the doc to get phone number
+                const doc = await db.collection("orders").doc(docId).get();
+                const phone = doc.data().phone;
+                const message = `Hi ${doc.data().customer}! Your order #${doc.data().id} is ready for pickup at The Freezing Point. See you soon!`;
+                window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(message)}`, '_blank');
             }
-        }
+        };
 
-        // Load initially and refresh every 3 seconds to act like real-time
-        loadOrders();
-        setInterval(loadOrders, 3000);
+        // 4. Coupon Management
+        window.setCoupon = async function() {
+            const code = document.getElementById('coupon-code').value.toUpperCase();
+            const percent = parseInt(document.getElementById('coupon-percent').value);
+            
+            if(!code || !percent) return alert("Enter both code and percentage!");
+
+            await db.collection("settings").doc("coupon").set({
+                isActive: true,
+                code: code,
+                discount: percent
+            });
+            document.getElementById('coupon-status').innerText = `Coupon ${code} is now LIVE on the customer app!`;
+        };
+
+        window.turnOffCoupon = async function() {
+            await db.collection("settings").doc("coupon").set({ isActive: false });
+            document.getElementById('coupon-status').innerText = "Coupon is turned OFF.";
+            document.getElementById('coupon-code').value = '';
+            document.getElementById('coupon-percent').value = '';
+        };
+
     </script>
 </body>
 </html>
