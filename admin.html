@@ -3,65 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | Freezing Point</title>
+    <title>Admin Dashboard | Freezing Point</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
-
     <script>tailwind.config = { theme: { extend: { colors: { brand: '#e11d48', darkbg: '#09090b', panel: '#18181b' } } } }</script>
 </head>
-<body class="bg-darkbg text-white font-sans antialiased p-6">
+<body class="bg-darkbg text-white font-sans antialiased p-6 pb-20">
 
-    <div class="max-w-6xl mx-auto space-y-6">
+    <div class="max-w-7xl mx-auto space-y-6">
         
         <div class="flex justify-between items-center bg-panel p-6 rounded-2xl border border-zinc-800">
             <div>
-                <h1 class="text-3xl font-extrabold">Live Orders Dashboard</h1>
-                <p class="text-green-500 text-sm flex items-center gap-2 mt-1">
-                    <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span> Connected to Firebase
+                <h1 class="text-3xl font-extrabold flex items-center gap-3"><i class="fas fa-satellite-dish text-brand"></i> Order Command Center</h1>
+                <p class="text-green-500 text-sm flex items-center gap-2 mt-1 font-bold tracking-wide">
+                    <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span> LIVE SYNC ACTIVE
                 </p>
             </div>
         </div>
 
-        <div class="bg-panel border border-zinc-800 rounded-2xl p-6">
-            <h2 class="text-xl font-bold mb-4">📢 Global Coupon Manager</h2>
-            <div class="flex gap-4 items-end">
-                <div class="flex-1">
-                    <label class="text-xs text-gray-400 uppercase">Coupon Code</label>
-                    <input type="text" id="coupon-code" placeholder="e.g. MONSOON20" class="w-full bg-darkbg border border-zinc-700 rounded-lg px-4 py-2 text-white outline-none uppercase mt-1">
-                </div>
-                <div class="w-32">
-                    <label class="text-xs text-gray-400 uppercase">Discount (%)</label>
-                    <input type="number" id="coupon-percent" placeholder="20" class="w-full bg-darkbg border border-zinc-700 rounded-lg px-4 py-2 text-white outline-none mt-1">
-                </div>
-                <button onclick="setCoupon()" class="bg-brand text-white px-6 py-2 rounded-lg font-bold hover:bg-rose-700 h-[42px]">Go Live</button>
-                <button onclick="turnOffCoupon()" class="bg-zinc-700 text-white px-6 py-2 rounded-lg font-bold hover:bg-zinc-600 h-[42px]">Turn Off</button>
+        <div class="bg-panel border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-zinc-800 bg-zinc-800/30 flex justify-between items-center">
+                <h2 class="font-bold text-lg"><i class="fas fa-clipboard-list text-brand mr-2"></i> Active Orders</h2>
             </div>
-            <p id="coupon-status" class="text-sm mt-3 text-brand font-bold"></p>
-        </div>
-
-        <div class="bg-panel border border-zinc-800 rounded-2xl overflow-hidden">
-            <table class="w-full text-left">
-                <thead class="bg-zinc-800/50 text-xs uppercase tracking-wider text-gray-400 border-b border-zinc-800">
-                    <tr>
-                        <th class="p-4">Order ID</th>
-                        <th class="p-4">Customer</th>
-                        <th class="p-4">Items</th>
-                        <th class="p-4">Total</th>
-                        <th class="p-4">Status</th>
-                        <th class="p-4 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="orders-list" class="divide-y divide-zinc-800/50">
-                    <tr><td colspan="6" class="p-8 text-center text-gray-500">Listening for live orders...</td></tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-zinc-900/50 text-xs uppercase tracking-wider text-gray-400 border-b border-zinc-800">
+                        <tr>
+                            <th class="p-4">Order Info</th>
+                            <th class="p-4">Customer & Type</th>
+                            <th class="p-4">Items Ordered</th>
+                            <th class="p-4">Payment</th>
+                            <th class="p-4">Live Status & ETA</th>
+                            <th class="p-4 text-right">Action Panel</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-list" class="divide-y divide-zinc-800/50">
+                        <tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Listening for live orders...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        // 1. Initialize Firebase
+        // FIREBASE INIT
         const firebaseConfig = {
             apiKey: "AIzaSyBI4yw5_LCfrPqVZSMqKlvxhzjOT-Ym18I",
             authDomain: "freezingpoint-ba86d.firebaseapp.com",
@@ -73,11 +60,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 2. Fetch Live Orders
+        // FETCH LIVE ORDERS
         db.collection("orders").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
             const list = document.getElementById('orders-list');
             if(snapshot.empty) {
-                list.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">No orders yet.</td></tr>`;
+                list.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-gray-500 font-bold"><i class="fas fa-bed text-4xl mb-3 opacity-30 block"></i> No active orders right now.</td></tr>`;
                 return;
             }
 
@@ -85,66 +72,83 @@
             snapshot.forEach((doc) => {
                 const order = doc.data();
                 
+                // Styling Type Badges
+                let typeBadge = order.orderType === 'delivery' 
+                    ? `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-motorcycle"></i> Delivery</span>`
+                    : `<span class="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-store"></i> Dine-In</span>`;
+                
+                // Styling Status Badges
                 let statusBadge = '';
-                if(order.status === 'PENDING') statusBadge = '<span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-500/20">NEW ORDER</span>';
-                if(order.status === 'PREPARING') statusBadge = '<span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-xs font-bold border border-yellow-500/20">PREPARING</span>';
-                if(order.status === 'READY') statusBadge = '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/20">READY</span>';
+                if(order.status === 'PENDING') statusBadge = '<span class="text-red-400 font-bold"><i class="fas fa-circle text-[10px] mr-1 animate-pulse"></i> Needs Action</span>';
+                if(order.status === 'PREPARING') statusBadge = `<span class="text-yellow-400 font-bold"><i class="fas fa-fire text-[10px] mr-1"></i> Cooking (ETA: ${order.eta}m)</span>`;
+                if(order.status === 'READY') statusBadge = '<span class="text-green-400 font-bold"><i class="fas fa-check text-[10px] mr-1"></i> Ready for Pickup</span>';
+                if(order.status === 'OUT_FOR_DELIVERY') statusBadge = '<span class="text-brand font-bold"><i class="fas fa-route text-[10px] mr-1"></i> Out for Delivery</span>';
 
+                // Action Buttons Logic
                 let actionBtn = '';
-                if(order.status === 'PENDING') actionBtn = `<button onclick="updateStatus('${doc.id}', 'PREPARING')" class="bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold px-4 py-2 rounded-lg">Accept & Prepare</button>`;
-                if(order.status === 'PREPARING') actionBtn = `<button onclick="updateStatus('${doc.id}', 'READY')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2 rounded-lg">Mark Ready & Text</button>`;
+                if(order.status === 'PENDING') {
+                    actionBtn = `<button onclick="acceptOrder('${doc.id}')" class="bg-brand hover:bg-rose-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-lg shadow-brand/30 transition w-full"><i class="fas fa-bell mr-1"></i> Accept & Set ETA</button>`;
+                } else if(order.status === 'PREPARING') {
+                    if(order.orderType === 'delivery') {
+                        actionBtn = `<button onclick="dispatchDelivery('${doc.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition w-full"><i class="fas fa-motorcycle mr-1"></i> Send Out & Notify</button>`;
+                    } else {
+                        actionBtn = `<button onclick="markReady('${doc.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition w-full"><i class="fas fa-check mr-1"></i> Mark Ready & Notify</button>`;
+                    }
+                } else {
+                    actionBtn = `<p class="text-xs text-gray-500 text-center font-bold">Order Complete</p>`;
+                }
 
                 html += `
-                    <tr class="hover:bg-zinc-800/20 transition">
-                        <td class="p-4 font-mono text-sm text-gray-400">#${order.id}</td>
+                    <tr class="hover:bg-zinc-800/40 transition border-b border-zinc-800/50">
                         <td class="p-4">
-                            <p class="font-bold text-white">${order.customer}</p>
-                            <p class="text-xs text-gray-500">${order.phone}</p>
+                            <p class="font-mono text-sm font-bold text-white">#${order.id}</p>
+                            <p class="text-xs text-gray-500 mt-1">${new Date(order.timestamp?.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                         </td>
-                        <td class="p-4 text-sm text-gray-300 max-w-xs">${order.items}</td>
-                        <td class="p-4 font-bold text-brand">₹${order.total}</td>
+                        <td class="p-4">
+                            <p class="font-bold text-white text-sm mb-1">${order.customer} <span class="text-gray-400 font-normal">(${order.phone})</span></p>
+                            ${typeBadge}
+                            ${order.orderType === 'delivery' ? `<p class="text-xs text-gray-400 mt-2 max-w-[200px] bg-zinc-900 p-2 rounded border border-zinc-700"><i class="fas fa-map-marker-alt text-brand"></i> ${order.address}</p>` : ''}
+                        </td>
+                        <td class="p-4 text-sm text-gray-300 max-w-[200px] leading-relaxed">${order.items}</td>
+                        <td class="p-4">
+                            <p class="font-extrabold text-white text-lg">₹${order.total}</p>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wider mt-1">${order.payment}</p>
+                        </td>
                         <td class="p-4">${statusBadge}</td>
-                        <td class="p-4 text-right">${actionBtn}</td>
+                        <td class="p-4 min-w-[160px]">${actionBtn}</td>
                     </tr>
                 `;
             });
             list.innerHTML = html;
-            
         });
 
-        // 3. Update Order Status
-        window.updateStatus = async function(docId, newStatus) {
-            await db.collection("orders").doc(docId).update({ status: newStatus });
-            
-            if(newStatus === 'READY') {
-                // Fetch the doc to get phone number
-                const doc = await db.collection("orders").doc(docId).get();
-                const phone = doc.data().phone;
-                const message = `Hi ${doc.data().customer}! Your order #${doc.data().id} is ready for pickup at The Freezing Point. See you soon!`;
-                window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(message)}`, '_blank');
+        // ACTION: ACCEPT & SET ETA
+        window.acceptOrder = async function(docId) {
+            const time = prompt("How many minutes will this order take? (e.g. 15, 30, 45)");
+            if(time) {
+                await db.collection("orders").doc(docId).update({ 
+                    status: 'PREPARING',
+                    eta: time
+                });
             }
         };
 
-        // 4. Coupon Management
-        window.setCoupon = async function() {
-            const code = document.getElementById('coupon-code').value.toUpperCase();
-            const percent = parseInt(document.getElementById('coupon-percent').value);
-            
-            if(!code || !percent) return alert("Enter both code and percentage!");
-
-            await db.collection("settings").doc("coupon").set({
-                isActive: true,
-                code: code,
-                discount: percent
-            });
-            document.getElementById('coupon-status').innerText = `Coupon ${code} is now LIVE on the customer app!`;
+        // ACTION: DINE-IN READY
+        window.markReady = async function(docId) {
+            await db.collection("orders").doc(docId).update({ status: 'READY' });
+            const doc = await db.collection("orders").doc(docId).get();
+            const phone = doc.data().phone;
+            const message = `Hi ${doc.data().customer}! Good news, your order (#${doc.data().id}) is ready to be enjoyed at The Freezing Point. See you at the counter! 🍨`;
+            window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(message)}`, '_blank');
         };
 
-        window.turnOffCoupon = async function() {
-            await db.collection("settings").doc("coupon").set({ isActive: false });
-            document.getElementById('coupon-status').innerText = "Coupon is turned OFF.";
-            document.getElementById('coupon-code').value = '';
-            document.getElementById('coupon-percent').value = '';
+        // ACTION: DELIVERY DISPATCHED
+        window.dispatchDelivery = async function(docId) {
+            await db.collection("orders").doc(docId).update({ status: 'OUT_FOR_DELIVERY' });
+            const doc = await db.collection("orders").doc(docId).get();
+            const phone = doc.data().phone;
+            const message = `Hi ${doc.data().customer}! Your order (#${doc.data().id}) is OUT FOR DELIVERY! 🏍️ Have your ₹${doc.data().total} ready (${doc.data().payment}). Enjoy your dessert!`;
+            window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(message)}`, '_blank');
         };
 
     </script>
