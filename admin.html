@@ -3,93 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | Freezing Point</title>
+    <title>The Freezing Point</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: { extend: { colors: { brand: '#e11d48', darkbg: '#09090b', panel: '#18181b' } } }
         }
     </script>
 </head>
-<body class="bg-darkbg text-white font-sans antialiased p-8">
+<body class="bg-darkbg text-white font-sans antialiased">
 
-    <div class="max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-extrabold text-white">Admin Dashboard</h1>
-            <button onclick="loadOrders()" class="bg-panel border border-zinc-700 px-4 py-2 rounded-lg text-sm hover:bg-zinc-800">Refresh <i class="fa-solid fa-rotate-right ml-2"></i></button>
+    <nav class="flex justify-between items-center px-4 md:px-8 py-4 border-b border-zinc-800 sticky top-0 bg-darkbg/90 backdrop-blur-md z-40">
+        <div class="flex items-center gap-2">
+            <span class="text-brand text-2xl"><i class="fa-solid fa-ice-cream"></i></span>
+            <h1 class="text-lg md:text-xl font-bold">Freezing Point</h1>
+        </div>
+        <button onclick="toggleCart()" class="bg-brand text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-rose-700 transition">
+            <i class="fa-solid fa-cart-shopping"></i> <span id="cart-count">0</span>
+        </button>
+    </nav>
+
+    <header class="text-center py-12 md:py-20 px-4">
+        <p class="text-brand text-xs md:text-sm font-bold tracking-widest uppercase mb-4">Shop 6, Swapna Nagari, Kalyan</p>
+        <h2 class="text-4xl md:text-7xl font-extrabold mb-6">Cool Down with <br><span class="bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-purple-500">Freezing Point</span></h2>
+        <a href="https://wa.me/919960840470" target="_blank" class="inline-block bg-green-600 px-6 py-3 rounded-full font-bold hover:bg-green-700 transition"><i class="fa-brands fa-whatsapp mr-2"></i> Order on WhatsApp</a>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 pb-24">
+        <h2 class="text-3xl font-bold mb-6">Our Menu</h2>
+
+        <div class="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+            <button onclick="filterMenu('All')" class="filter-btn active bg-brand px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap">All</button>
+            <button onclick="filterMenu('Mastani')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Mastani</button>
+            <button onclick="filterMenu('Thick Milkshakes')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Thick Shakes</button>
+            <button onclick="filterMenu('Crunch Milkshakes')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Crunch Shakes</button>
+            <button onclick="filterMenu('Falooda')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Falooda</button>
+            <button onclick="filterMenu('Cold Coffee')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Cold Coffee</button>
         </div>
 
-        <div class="bg-panel border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
-            <table class="w-full text-left">
-                <thead class="bg-zinc-900 border-b border-zinc-800 text-gray-400 text-sm uppercase tracking-wider">
-                    <tr>
-                        <th class="p-4">Order ID</th>
-                        <th class="p-4">Customer</th>
-                        <th class="p-4">Items</th>
-                        <th class="p-4">Total (₹)</th>
-                        <th class="p-4">Status</th>
-                        <th class="p-4 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="order-table" class="divide-y divide-zinc-800/50 text-sm">
-                    </tbody>
-            </table>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="menu-grid">
+            </div>
+    </main>
+
+    <div id="cart-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex justify-end">
+        <div class="bg-panel w-full md:w-[400px] h-full p-6 flex flex-col border-l border-zinc-800 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold" id="modal-title">Your Order</h2>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+
+            <div id="cart-items" class="flex-1 overflow-y-auto space-y-4 pr-2"></div>
+
+            <div id="checkout-form" class="hidden flex-1 space-y-4">
+                <input type="text" id="cust-name" placeholder="Full Name" class="w-full bg-darkbg border border-zinc-700 rounded-lg px-4 py-3 text-white outline-none focus:border-brand">
+                <input type="text" id="cust-phone" placeholder="Phone Number" class="w-full bg-darkbg border border-zinc-700 rounded-lg px-4 py-3 text-white outline-none focus:border-brand">
+            </div>
+
+            <div class="border-t border-zinc-800 pt-4 mt-4">
+                <div class="flex justify-between text-lg font-bold mb-4">
+                    <span>Total</span>
+                    <span class="text-brand">₹<span id="cart-total">0</span></span>
+                </div>
+                <button id="btn-proceed" onclick="showCheckout()" class="w-full bg-brand text-white py-4 rounded-xl font-bold text-lg hover:bg-rose-700 transition">Proceed to Checkout</button>
+                <button id="btn-confirm" onclick="confirmOrder()" class="hidden w-full bg-brand text-white py-4 rounded-xl font-bold text-lg hover:bg-rose-700 transition">Confirm Order (COD)</button>
+            </div>
         </div>
     </div>
 
     <script>
-        function loadOrders() {
-            const table = document.getElementById('order-table');
-            let orders = JSON.parse(localStorage.getItem('fp_orders')) || [];
+        // FULL MENU DATA
+        const products = [
+            // Mastani
+            { id: 101, name: "Vanilla Mastani", price: 160, category: "Mastani" },
+            { id: 102, name: "Chocolate Mastani", price: 180, category: "Mastani" },
+            { id: 103, name: "Strawberry Mastani", price: 160, category: "Mastani" },
+            { id: 104, name: "Black Currant Mastani", price: 190, category: "Mastani" },
+            { id: 105, name: "Rose Mastani", price: 160, category: "Mastani" },
+            { id: 106, name: "Butterscotch Mastani", price: 190, category: "Mastani" },
+            { id: 107, name: "Paan Mastani", price: 180, category: "Mastani" },
+            { id: 108, name: "Kesar Pista Mastani", price: 220, category: "Mastani" },
+            { id: 109, name: "Rajbhog Mastani", price: 220, category: "Mastani" },
+            { id: 110, name: "Anjir Mastani", price: 220, category: "Mastani" },
+            { id: 111, name: "Tender Coconut Mastani", price: 220, category: "Mastani" },
+            { id: 112, name: "Vanilla Oreo Mastani", price: 200, category: "Mastani" },
+            { id: 113, name: "Chocolate Oreo Mastani", price: 200, category: "Mastani" },
+            { id: 114, name: "Vanilla Chocolate Mix Mastani", price: 250, category: "Mastani" },
+            // Thick Milkshakes
+            { id: 201, name: "Vanilla Thick Shake", price: 160, category: "Thick Milkshakes" },
+            { id: 202, name: "Chocolate Thick Shake", price: 160, category: "Thick Milkshakes" },
+            { id: 203, name: "Strawberry Thick Shake", price: 160, category: "Thick Milkshakes" },
+            { id: 204, name: "Rose Thick Shake", price: 160, category: "Thick Milkshakes" },
+            { id: 205, name: "Butterscotch Thick Shake", price: 170, category: "Thick Milkshakes" },
+            { id: 206, name: "Black Currant Thick Shake", price: 180, category: "Thick Milkshakes" },
+            { id: 207, name: "Paan Thick Shake", price: 180, category: "Thick Milkshakes" },
+            { id: 208, name: "Anjir Thick Shake", price: 200, category: "Thick Milkshakes" },
+            { id: 209, name: "White Chocolate Thick Shake", price: 160, category: "Thick Milkshakes" },
+            { id: 210, name: "Peanut Butter Thick Shake", price: 180, category: "Thick Milkshakes" },
+            { id: 211, name: "Cherry Anjir Thick Shake", price: 200, category: "Thick Milkshakes" },
+            { id: 212, name: "Nutella Thick Shake", price: 220, category: "Thick Milkshakes" },
+            { id: 213, name: "Dark Chocolate Thick Shake", price: 220, category: "Thick Milkshakes" },
+            { id: 214, name: "Chocolate Hazelnut Thick Shake", price: 220, category: "Thick Milkshakes" },
+            // Crunch Milkshakes
+            { id: 301, name: "KitKat Crunch Shake", price: 180, category: "Crunch Milkshakes" },
+            { id: 302, name: "Oreo Crunch Shake", price: 180, category: "Crunch Milkshakes" },
+            { id: 303, name: "Bourbon Crunch Shake", price: 180, category: "Crunch Milkshakes" },
+            { id: 304, name: "Hide & Seek Crunch Shake", price: 180, category: "Crunch Milkshakes" },
+            { id: 305, name: "Biscoff Crunch Shake", price: 300, category: "Crunch Milkshakes" },
+            { id: 306, name: "Nutella Brownie Crunch Shake", price: 250, category: "Crunch Milkshakes" },
+            { id: 307, name: "Dark KitKat Crunch Shake", price: 250, category: "Crunch Milkshakes" },
+            { id: 308, name: "Chocolate Brownie Crunch Shake", price: 200, category: "Crunch Milkshakes" },
+            // Falooda
+            { id: 401, name: "Rose Falooda", price: 180, category: "Falooda" },
+            { id: 402, name: "Strawberry Falooda", price: 180, category: "Falooda" },
+            { id: 403, name: "Chocolate Falooda", price: 190, category: "Falooda" },
+            { id: 404, name: "Butterscotch Falooda", price: 190, category: "Falooda" },
+            { id: 405, name: "Kesar Pista Falooda", price: 220, category: "Falooda" },
+            { id: 406, name: "Rajbhog Falooda", price: 220, category: "Falooda" },
+            // Cold Coffee
+            { id: 501, name: "Classic Cold Coffee", price: 160, category: "Cold Coffee" },
+            { id: 502, name: "Chocolate Cold Coffee", price: 180, category: "Cold Coffee" },
+            { id: 503, name: "Cappuccino Cold Coffee", price: 180, category: "Cold Coffee" },
+            { id: 504, name: "Hazelnut Cold Coffee", price: 200, category: "Cold Coffee" },
+            { id: 505, name: "Chocolate Hazelnut Cold Coffee", price: 250, category: "Cold Coffee" }
+        ];
 
-            if (orders.length === 0) {
-                table.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">No orders yet. Go to the customer page to place an order!</td></tr>`;
-                return;
-            }
+        let cart = [];
+        let currentFilter = 'All';
 
-            table.innerHTML = orders.map(order => `
-                <tr class="hover:bg-zinc-800/30 transition">
-                    <td class="p-4 text-gray-400 text-xs font-mono">${order.id}</td>
-                    <td class="p-4">
-                        <div class="font-bold text-white">${order.customer}</div>
-                        <div class="text-gray-500 text-xs">${order.phone}</div>
-                    </td>
-                    <td class="p-4 text-gray-300 max-w-xs truncate">${order.items}</td>
-                    <td class="p-4 font-bold text-brand">₹${order.total}</td>
-                    <td class="p-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold ${
-                            order.status === 'PENDING' ? 'bg-orange-500/20 text-orange-400' :
-                            order.status === 'PREPARING' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-green-500/20 text-green-400'
-                        }">
-                            ${order.status}
-                        </span>
-                    </td>
-                    <td class="p-4 text-right">
-                        ${order.status === 'PENDING' ? 
-                            `<button onclick="updateStatus('${order.id}', 'PREPARING')" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">Prepare</button>` : 
-                        order.status === 'PREPARING' ? 
-                            `<button onclick="updateStatus('${order.id}', 'COMPLETED')" class="bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">Complete</button>` : 
-                            `<span class="text-gray-500 text-xs"><i class="fa-solid fa-check"></i> Done</span>`
-                        }
-                    </td>
-                </tr>
+        function renderMenu() {
+            const grid = document.getElementById('menu-grid');
+            const filteredProducts = currentFilter === 'All' ? products : products.filter(p => p.category === currentFilter);
+            
+            grid.innerHTML = filteredProducts.map(p => `
+                <div class="bg-panel border border-zinc-800 rounded-2xl p-4 flex justify-between items-center hover:border-zinc-600 transition">
+                    <div>
+                        <h3 class="font-bold text-white">${p.name}</h3>
+                        <p class="text-xs text-gray-500 mb-2">${p.category}</p>
+                        <span class="text-brand font-bold text-lg">₹${p.price}</span>
+                    </div>
+                    <button onclick="addToCart(${p.id})" class="bg-brand/10 text-brand hover:bg-brand hover:text-white px-4 py-2 rounded-lg font-bold text-sm transition">ADD</button>
+                </div>
             `).join('');
         }
 
-        function updateStatus(id, newStatus) {
-            let orders = JSON.parse(localStorage.getItem('fp_orders')) || [];
-            let orderIndex = orders.findIndex(o => o.id === id);
-            if (orderIndex > -1) {
-                orders[orderIndex].status = newStatus;
-                localStorage.setItem('fp_orders', JSON.stringify(orders));
-                loadOrders(); // Refresh table
-            }
+        function filterMenu(category) {
+            currentFilter = category;
+            
+            // Update button styles
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.innerText === category || (category === 'All' && btn.innerText === 'All')) {
+                    btn.classList.remove('bg-panel', 'border', 'border-zinc-800');
+                    btn.classList.add('bg-brand');
+                } else {
+                    btn.classList.add('bg-panel', 'border', 'border-zinc-800');
+                    btn.classList.remove('bg-brand');
+                }
+            });
+            
+            renderMenu();
         }
 
-        // Load initially and refresh every 3 seconds to act like real-time
-        loadOrders();
-        setInterval(loadOrders, 3000);
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            const existing = cart.find(item => item.id === id);
+            if (existing) existing.qty++;
+            else cart.push({ ...product, qty: 1 });
+            updateCartUI();
+            
+            // Small popup feedback
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "ADDED ✓";
+            setTimeout(() => btn.innerText = originalText, 1000);
+        }
+
+        function updateCartUI() {
+            document.getElementById('cart-count').innerText = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cart-total').innerText = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            const cartItemsContainer = document.getElementById('cart-items');
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `<p class="text-gray-500 text-center mt-10">Your cart is empty.</p>`;
+                return;
+            }
+
+            cartItemsContainer.innerHTML = cart.map(item => `
+                <div class="flex justify-between items-center bg-darkbg p-3 rounded-lg border border-zinc-800">
+                    <div class="flex-1 pr-2">
+                        <h4 class="font-bold text-sm text-white line-clamp-1">${item.name}</h4>
+                        <span class="text-brand text-sm font-bold">₹${item.price * item.qty}</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-panel px-2 py-1 rounded-md border border-zinc-700 shrink-0">
+                        <button onclick="changeQty(${item.id}, -1)" class="text-gray-400 hover:text-white px-1">-</button>
+                        <span class="text-sm font-bold w-4 text-center">${item.qty}</span>
+                        <button onclick="changeQty(${item.id}, 1)" class="text-gray-400 hover:text-white px-1">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function changeQty(id, change) {
+            const item = cart.find(i => i.id === id);
+            item.qty += change;
+            if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+            updateCartUI();
+        }
+
+        function toggleCart() {
+            document.getElementById('cart-modal').classList.toggle('hidden');
+            document.getElementById('checkout-form').classList.add('hidden');
+            document.getElementById('cart-items').classList.remove('hidden');
+            document.getElementById('btn-proceed').classList.remove('hidden');
+            document.getElementById('btn-confirm').classList.add('hidden');
+            document.getElementById('modal-title').innerText = "Your Order";
+        }
+
+        function showCheckout() {
+            if(cart.length === 0) return alert("Cart is empty!");
+            document.getElementById('cart-items').classList.add('hidden');
+            document.getElementById('checkout-form').classList.remove('hidden');
+            document.getElementById('btn-proceed').classList.add('hidden');
+            document.getElementById('btn-confirm').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = "Checkout Details";
+        }
+
+        function confirmOrder() {
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            if(!name || !phone) return alert("Please enter name and phone number!");
+
+            const newOrder = {
+                id: Math.random().toString(36).substr(2, 9),
+                customer: name,
+                phone: phone,
+                items: cart.map(i => `${i.qty}x ${i.name}`).join(', '),
+                total: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
+                status: 'PENDING'
+            };
+
+            let orders = JSON.parse(localStorage.getItem('fp_orders')) || [];
+            orders.unshift(newOrder);
+            localStorage.setItem('fp_orders', JSON.stringify(orders));
+
+            alert(`Order Confirmed! Thank you ${name}.`);
+            cart = [];
+            updateCartUI();
+            toggleCart();
+        }
+
+        renderMenu();
+        updateCartUI();
     </script>
 </body>
 </html>
