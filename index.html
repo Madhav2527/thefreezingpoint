@@ -2,19 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Freezing Point</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Freezing Point | Menu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body { -webkit-tap-highlight-color: transparent; }
+    </style>
     <script>
-        tailwind.config = {
-            theme: { extend: { colors: { brand: '#e11d48', darkbg: '#09090b', panel: '#18181b' } } }
-        }
+        tailwind.config = { theme: { extend: { colors: { brand: '#e11d48', darkbg: '#09090b', panel: '#18181b' } } } }
     </script>
 </head>
-<body class="bg-darkbg text-white font-sans antialiased">
+<body class="bg-darkbg text-white font-sans antialiased pb-20">
 
-    <nav class="flex justify-between items-center px-4 md:px-8 py-4 border-b border-zinc-800 sticky top-0 bg-darkbg/90 backdrop-blur-md z-40">
+    <nav class="flex justify-between items-center px-4 md:px-8 py-4 border-b border-zinc-800 sticky top-0 bg-darkbg/95 backdrop-blur-md z-40">
         <div class="flex items-center gap-2">
             <span class="text-brand text-2xl"><i class="fa-solid fa-ice-cream"></i></span>
             <h1 class="text-lg md:text-xl font-bold">Freezing Point</h1>
@@ -24,57 +31,117 @@
         </button>
     </nav>
 
-    <header class="text-center py-12 md:py-20 px-4">
-        <p class="text-brand text-xs md:text-sm font-bold tracking-widest uppercase mb-4">Shop 6, Swapna Nagari, Kalyan</p>
-        <h2 class="text-4xl md:text-7xl font-extrabold mb-6">Cool Down with <br><span class="bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-purple-500">Freezing Point</span></h2>
-        <a href="https://wa.me/919960840470" target="_blank" class="inline-block bg-green-600 px-6 py-3 rounded-full font-bold hover:bg-green-700 transition"><i class="fa-brands fa-whatsapp mr-2"></i> Order on WhatsApp</a>
+    <header class="text-center py-10 px-4 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-brand/10 to-transparent z-0"></div>
+        <div class="relative z-10">
+            <p class="text-brand text-xs font-bold tracking-widest uppercase mb-3">Shop 6, Swapna Nagari, Kalyan</p>
+            <h2 class="text-4xl md:text-6xl font-extrabold mb-4">Cool Down with <br><span class="bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-purple-500">Freezing Point</span></h2>
+            <a href="https://wa.me/919960840470" target="_blank" class="inline-block bg-green-600 px-6 py-3 rounded-full font-bold hover:bg-green-700 transition shadow-lg shadow-green-900/50"><i class="fa-brands fa-whatsapp mr-2"></i> Order on WhatsApp</a>
+        </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 pb-24">
-        <h2 class="text-3xl font-bold mb-6">Our Menu</h2>
-
-        <div class="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-            <button onclick="filterMenu('All')" class="filter-btn active bg-brand px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap">All</button>
-            <button onclick="filterMenu('Mastani')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Mastani</button>
-            <button onclick="filterMenu('Thick Milkshakes')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Thick Shakes</button>
-            <button onclick="filterMenu('Crunch Milkshakes')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Crunch Shakes</button>
-            <button onclick="filterMenu('Falooda')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Falooda</button>
-            <button onclick="filterMenu('Cold Coffee')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-800 whitespace-nowrap">Cold Coffee</button>
+    <main class="max-w-4xl mx-auto px-4">
+        
+        <div id="live-coupon-banner" class="hidden bg-gradient-to-r from-rose-600 to-brand text-white p-5 rounded-2xl mb-8 flex justify-between items-center shadow-lg shadow-brand/20 border border-rose-500/30">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-rose-200 mb-1"><i class="fas fa-bolt mr-1"></i> Special Offer</p>
+                <h3 class="font-extrabold text-xl mb-1">Use code <span id="display-code" class="bg-white text-brand px-2 py-0.5 rounded text-sm ml-1 uppercase tracking-wider">...</span></h3>
+                <p id="display-desc" class="text-sm text-rose-100">Loading offer...</p>
+            </div>
+            <div class="bg-white/20 p-3 rounded-full w-12 h-12 flex items-center justify-center shrink-0">
+                <i class="fas fa-tags text-2xl text-white"></i>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="menu-grid">
+        <h2 class="text-2xl font-bold mb-4">Our Menu</h2>
+
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2 hide-scrollbar">
+            <button onclick="filterMenu('All')" class="filter-btn active bg-brand px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap">All</button>
+            <button onclick="filterMenu('Mastani')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap">Mastani</button>
+            <button onclick="filterMenu('Thick Milkshakes')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap">Thick Shakes</button>
+            <button onclick="filterMenu('Crunch Milkshakes')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap">Crunch Shakes</button>
+            <button onclick="filterMenu('Falooda')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap">Falooda</button>
+            <button onclick="filterMenu('Cold Coffee')" class="filter-btn bg-panel border border-zinc-800 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap">Cold Coffee</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="menu-grid"></div>
+
+        <footer class="mt-16 mb-8 pt-8 border-t border-zinc-800 text-center">
+            <h3 class="text-xl font-extrabold mb-4">The Freezing Point</h3>
+            <div class="bg-panel rounded-2xl p-6 border border-zinc-800 inline-block text-left w-full">
+                <div class="flex items-start gap-3 mb-4">
+                    <i class="fas fa-map-marker-alt text-brand mt-1"></i>
+                    <p class="text-sm text-gray-300">Shop 6, Swapna Nagari Building, West, Near D-Mart, Godrej Hill, Khadakpada, Kalyan</p>
+                </div>
+                <div class="flex items-center gap-3 mb-4">
+                    <i class="fas fa-clock text-blue-500"></i>
+                    <p class="text-sm text-white font-bold bg-blue-500/20 px-3 py-1 rounded-lg">Open Daily: 2:00 PM - 2:00 AM</p>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <a href="https://wa.me/919960840470" class="flex-1 bg-zinc-800 hover:bg-zinc-700 py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                        <i class="fab fa-whatsapp text-green-500 text-xl"></i><span class="font-bold text-sm">WhatsApp</span>
+                    </a>
+                    <a href="https://www.instagram.com/the_freezing_point02?igsh=MXQ3OTVkemc5bmpwaA==" class="flex-1 bg-zinc-800 hover:bg-zinc-700 py-3 rounded-xl flex items-center justify-center gap-2 transition">
+                        <i class="fab fa-instagram text-pink-500 text-xl"></i><span class="font-bold text-sm">Instagram</span>
+                    </a>
+                </div>
             </div>
+        </footer>
     </main>
 
-    <div id="cart-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex justify-end">
+    <div id="cart-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden z-50 flex justify-end transition-opacity">
         <div class="bg-panel w-full md:w-[400px] h-full p-6 flex flex-col border-l border-zinc-800 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold" id="modal-title">Your Order</h2>
-                <button onclick="toggleCart()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                <h2 class="text-xl font-bold" id="modal-title">Your Cart</h2>
+                <button onclick="toggleCart()" class="bg-zinc-800 text-gray-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <div id="cart-items" class="flex-1 overflow-y-auto space-y-4 pr-2"></div>
+            <div id="cart-items" class="flex-1 overflow-y-auto space-y-4 pr-2 hide-scrollbar"></div>
 
             <div id="checkout-form" class="hidden flex-1 space-y-4">
+                <div class="bg-darkbg p-4 rounded-xl border border-zinc-800 mb-4">
+                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-2 font-bold">Apply Coupon</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="coupon-input" placeholder="Enter code" class="flex-1 bg-panel border border-zinc-700 rounded-lg px-3 py-2 text-white outline-none focus:border-brand uppercase text-sm">
+                        <button onclick="applyCoupon()" class="bg-zinc-700 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-zinc-600">Apply</button>
+                    </div>
+                    <p id="coupon-message" class="text-xs mt-2 hidden"></p>
+                </div>
+
+                <p class="text-xs text-gray-400 uppercase tracking-wider mb-2 font-bold mt-4">Contact Details</p>
                 <input type="text" id="cust-name" placeholder="Full Name" class="w-full bg-darkbg border border-zinc-700 rounded-lg px-4 py-3 text-white outline-none focus:border-brand">
-                <input type="text" id="cust-phone" placeholder="Phone Number" class="w-full bg-darkbg border border-zinc-700 rounded-lg px-4 py-3 text-white outline-none focus:border-brand">
+                <input type="tel" id="cust-phone" placeholder="Phone Number" class="w-full bg-darkbg border border-zinc-700 rounded-lg px-4 py-3 text-white outline-none focus:border-brand">
             </div>
 
-            <div class="border-t border-zinc-800 pt-4 mt-4">
+            <div class="border-t border-zinc-800 pt-4 mt-4 pb-8">
                 <div class="flex justify-between text-lg font-bold mb-4">
                     <span>Total</span>
-                    <span class="text-brand">₹<span id="cart-total">0</span></span>
+                    <div class="text-right">
+                        <span id="original-total" class="text-sm text-gray-500 line-through mr-2 hidden">₹0</span>
+                        <span class="text-brand text-xl">₹<span id="cart-total">0</span></span>
+                    </div>
                 </div>
                 <button id="btn-proceed" onclick="showCheckout()" class="w-full bg-brand text-white py-4 rounded-xl font-bold text-lg hover:bg-rose-700 transition">Proceed to Checkout</button>
-                <button id="btn-confirm" onclick="confirmOrder()" class="hidden w-full bg-brand text-white py-4 rounded-xl font-bold text-lg hover:bg-rose-700 transition">Confirm Order (COD)</button>
+                <button id="btn-confirm" onclick="confirmOrder()" class="hidden w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition">Confirm Order (COD)</button>
             </div>
         </div>
     </div>
 
     <script>
-        // FULL MENU DATA
+        // 1. Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBI4yw5_LCfrPqVZSMqKlvxhzjOT-Ym18I",
+            authDomain: "freezingpoint-ba86d.firebaseapp.com",
+            projectId: "freezingpoint-ba86d",
+            storageBucket: "freezingpoint-ba86d.firebasestorage.app",
+            messagingSenderId: "70138777670",
+            appId: "1:70138777670:web:610674abe5efa20c46fa47"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Menu Data
         const products = [
-            // Mastani
             { id: 101, name: "Vanilla Mastani", price: 160, category: "Mastani" },
             { id: 102, name: "Chocolate Mastani", price: 180, category: "Mastani" },
             { id: 103, name: "Strawberry Mastani", price: 160, category: "Mastani" },
@@ -89,7 +156,6 @@
             { id: 112, name: "Vanilla Oreo Mastani", price: 200, category: "Mastani" },
             { id: 113, name: "Chocolate Oreo Mastani", price: 200, category: "Mastani" },
             { id: 114, name: "Vanilla Chocolate Mix Mastani", price: 250, category: "Mastani" },
-            // Thick Milkshakes
             { id: 201, name: "Vanilla Thick Shake", price: 160, category: "Thick Milkshakes" },
             { id: 202, name: "Chocolate Thick Shake", price: 160, category: "Thick Milkshakes" },
             { id: 203, name: "Strawberry Thick Shake", price: 160, category: "Thick Milkshakes" },
@@ -104,7 +170,6 @@
             { id: 212, name: "Nutella Thick Shake", price: 220, category: "Thick Milkshakes" },
             { id: 213, name: "Dark Chocolate Thick Shake", price: 220, category: "Thick Milkshakes" },
             { id: 214, name: "Chocolate Hazelnut Thick Shake", price: 220, category: "Thick Milkshakes" },
-            // Crunch Milkshakes
             { id: 301, name: "KitKat Crunch Shake", price: 180, category: "Crunch Milkshakes" },
             { id: 302, name: "Oreo Crunch Shake", price: 180, category: "Crunch Milkshakes" },
             { id: 303, name: "Bourbon Crunch Shake", price: 180, category: "Crunch Milkshakes" },
@@ -113,14 +178,12 @@
             { id: 306, name: "Nutella Brownie Crunch Shake", price: 250, category: "Crunch Milkshakes" },
             { id: 307, name: "Dark KitKat Crunch Shake", price: 250, category: "Crunch Milkshakes" },
             { id: 308, name: "Chocolate Brownie Crunch Shake", price: 200, category: "Crunch Milkshakes" },
-            // Falooda
             { id: 401, name: "Rose Falooda", price: 180, category: "Falooda" },
             { id: 402, name: "Strawberry Falooda", price: 180, category: "Falooda" },
             { id: 403, name: "Chocolate Falooda", price: 190, category: "Falooda" },
             { id: 404, name: "Butterscotch Falooda", price: 190, category: "Falooda" },
             { id: 405, name: "Kesar Pista Falooda", price: 220, category: "Falooda" },
             { id: 406, name: "Rajbhog Falooda", price: 220, category: "Falooda" },
-            // Cold Coffee
             { id: 501, name: "Classic Cold Coffee", price: 160, category: "Cold Coffee" },
             { id: 502, name: "Chocolate Cold Coffee", price: 180, category: "Cold Coffee" },
             { id: 503, name: "Cappuccino Cold Coffee", price: 180, category: "Cold Coffee" },
@@ -130,74 +193,96 @@
 
         let cart = [];
         let currentFilter = 'All';
+        let activeCoupon = null; 
+        let discountApplied = 0;
+
+        // 2. Listen to Global Coupons from Admin
+        db.collection("settings").doc("coupon").onSnapshot((doc) => {
+            const banner = document.getElementById('live-coupon-banner');
+            if (doc.exists && doc.data().isActive) {
+                activeCoupon = doc.data();
+                document.getElementById('display-code').innerText = activeCoupon.code;
+                document.getElementById('display-desc').innerText = `Get ${activeCoupon.discount}% off!`;
+                banner.classList.remove('hidden');
+            } else {
+                activeCoupon = null;
+                banner.classList.add('hidden');
+            }
+        });
 
         function renderMenu() {
             const grid = document.getElementById('menu-grid');
             const filteredProducts = currentFilter === 'All' ? products : products.filter(p => p.category === currentFilter);
-            
             grid.innerHTML = filteredProducts.map(p => `
-                <div class="bg-panel border border-zinc-800 rounded-2xl p-4 flex justify-between items-center hover:border-zinc-600 transition">
+                <div class="bg-panel border border-zinc-800 rounded-2xl p-4 flex justify-between items-center">
                     <div>
                         <h3 class="font-bold text-white">${p.name}</h3>
-                        <p class="text-xs text-gray-500 mb-2">${p.category}</p>
-                        <span class="text-brand font-bold text-lg">₹${p.price}</span>
+                        <span class="text-brand font-bold">₹${p.price}</span>
                     </div>
-                    <button onclick="addToCart(${p.id})" class="bg-brand/10 text-brand hover:bg-brand hover:text-white px-4 py-2 rounded-lg font-bold text-sm transition">ADD</button>
+                    <button onclick="addToCart(${p.id}, this)" class="bg-brand/10 text-brand px-4 py-2 rounded-xl font-bold text-sm">ADD</button>
                 </div>
             `).join('');
         }
 
         function filterMenu(category) {
             currentFilter = category;
-            
-            // Update button styles
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                if(btn.innerText === category || (category === 'All' && btn.innerText === 'All')) {
-                    btn.classList.remove('bg-panel', 'border', 'border-zinc-800');
-                    btn.classList.add('bg-brand');
-                } else {
-                    btn.classList.add('bg-panel', 'border', 'border-zinc-800');
-                    btn.classList.remove('bg-brand');
-                }
+                btn.className = `filter-btn px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap ${btn.innerText === category || (category === 'All' && btn.innerText === 'All') ? 'bg-brand' : 'bg-panel border border-zinc-800'}`;
             });
-            
             renderMenu();
         }
 
-        function addToCart(id) {
+        function addToCart(id, btnElement) {
             const product = products.find(p => p.id === id);
             const existing = cart.find(item => item.id === id);
             if (existing) existing.qty++;
             else cart.push({ ...product, qty: 1 });
             updateCartUI();
             
-            // Small popup feedback
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "ADDED ✓";
-            setTimeout(() => btn.innerText = originalText, 1000);
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "✓";
+            setTimeout(() => btnElement.innerText = originalText, 500);
+        }
+
+        function applyCoupon() {
+            const input = document.getElementById('coupon-input').value.toUpperCase();
+            const msg = document.getElementById('coupon-message');
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            if (activeCoupon && input === activeCoupon.code) {
+                discountApplied = Math.floor(subtotal * (activeCoupon.discount / 100));
+                msg.innerText = `✓ Saved ₹${discountApplied}!`;
+                msg.className = "text-xs mt-2 text-green-500 font-bold block";
+            } else {
+                discountApplied = 0;
+                msg.innerText = "Invalid or expired code.";
+                msg.className = "text-xs mt-2 text-brand font-bold block";
+            }
+            updateCartUI();
         }
 
         function updateCartUI() {
-            document.getElementById('cart-count').innerText = cart.reduce((sum, item) => sum + item.qty, 0);
-            document.getElementById('cart-total').innerText = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cart-count').innerText = count;
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const finalTotal = subtotal - discountApplied;
+            document.getElementById('cart-total').innerText = finalTotal > 0 ? finalTotal : 0;
             
             const cartItemsContainer = document.getElementById('cart-items');
             if (cart.length === 0) {
-                cartItemsContainer.innerHTML = `<p class="text-gray-500 text-center mt-10">Your cart is empty.</p>`;
+                cartItemsContainer.innerHTML = `<p class="text-gray-500 text-center mt-10">Cart is empty.</p>`;
+                discountApplied = 0; document.getElementById('coupon-message').classList.add('hidden');
                 return;
             }
 
             cartItemsContainer.innerHTML = cart.map(item => `
                 <div class="flex justify-between items-center bg-darkbg p-3 rounded-lg border border-zinc-800">
-                    <div class="flex-1 pr-2">
-                        <h4 class="font-bold text-sm text-white line-clamp-1">${item.name}</h4>
-                        <span class="text-brand text-sm font-bold">₹${item.price * item.qty}</span>
-                    </div>
-                    <div class="flex items-center gap-3 bg-panel px-2 py-1 rounded-md border border-zinc-700 shrink-0">
-                        <button onclick="changeQty(${item.id}, -1)" class="text-gray-400 hover:text-white px-1">-</button>
+                    <div class="flex-1"><h4 class="font-bold text-sm text-white">${item.name}</h4><span class="text-brand">₹${item.price * item.qty}</span></div>
+                    <div class="flex gap-2 items-center bg-panel px-2 py-1 rounded-md">
+                        <button onclick="changeQty(${item.id}, -1)" class="text-gray-400 px-1">-</button>
                         <span class="text-sm font-bold w-4 text-center">${item.qty}</span>
-                        <button onclick="changeQty(${item.id}, 1)" class="text-gray-400 hover:text-white px-1">+</button>
+                        <button onclick="changeQty(${item.id}, 1)" class="text-gray-400 px-1">+</button>
                     </div>
                 </div>
             `).join('');
@@ -216,44 +301,55 @@
             document.getElementById('cart-items').classList.remove('hidden');
             document.getElementById('btn-proceed').classList.remove('hidden');
             document.getElementById('btn-confirm').classList.add('hidden');
-            document.getElementById('modal-title').innerText = "Your Order";
+            document.body.style.overflow = document.getElementById('cart-modal').classList.contains('hidden') ? 'auto' : 'hidden';
         }
 
         function showCheckout() {
-            if(cart.length === 0) return alert("Cart is empty!");
+            if(cart.length === 0) return alert("Your cart is empty!");
             document.getElementById('cart-items').classList.add('hidden');
             document.getElementById('checkout-form').classList.remove('hidden');
             document.getElementById('btn-proceed').classList.add('hidden');
             document.getElementById('btn-confirm').classList.remove('hidden');
-            document.getElementById('modal-title').innerText = "Checkout Details";
         }
 
-        function confirmOrder() {
+        // 3. Send Order to Firebase Database
+        async function confirmOrder() {
             const name = document.getElementById('cust-name').value;
             const phone = document.getElementById('cust-phone').value;
-            if(!name || !phone) return alert("Please enter name and phone number!");
+            if(!name || !phone) return alert("Please enter your name and phone number.");
 
-            const newOrder = {
-                id: Math.random().toString(36).substr(2, 9),
-                customer: name,
-                phone: phone,
-                items: cart.map(i => `${i.qty}x ${i.name}`).join(', '),
-                total: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
-                status: 'PENDING'
-            };
+            const btn = document.getElementById('btn-confirm');
+            btn.innerText = "Sending Order...";
+            btn.disabled = true;
 
-            let orders = JSON.parse(localStorage.getItem('fp_orders')) || [];
-            orders.unshift(newOrder);
-            localStorage.setItem('fp_orders', JSON.stringify(orders));
+            const orderId = Math.random().toString(36).substr(2, 6).toUpperCase();
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-            alert(`Order Confirmed! Thank you ${name}.`);
-            cart = [];
-            updateCartUI();
-            toggleCart();
+            try {
+                await db.collection("orders").doc(orderId).set({
+                    id: orderId,
+                    customer: name,
+                    phone: phone,
+                    items: cart.map(i => `${i.qty}x ${i.name}`).join(', '),
+                    total: subtotal - discountApplied,
+                    status: 'PENDING',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                alert(`Order Confirmed! Your ID is #${orderId}.`);
+                cart = [];
+                discountApplied = 0;
+                updateCartUI();
+                toggleCart();
+            } catch (error) {
+                console.error("Error writing document: ", error);
+                alert("Failed to place order. Did you enable Firestore in Test Mode?");
+            }
+            btn.innerText = "Confirm Order (COD)";
+            btn.disabled = false;
         }
 
         renderMenu();
-        updateCartUI();
     </script>
 </body>
 </html>
