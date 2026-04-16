@@ -3,203 +3,761 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Freezing Point | Menu</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>The Freezing Point – Thick Shakes & Desserts</title>
+    <meta name="description" content="The Freezing Point – Kalyan's favourite spot for Mastani, Thick Shakes, Falooda & Cold Coffee. Order online now!">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --bg-deep: #050a1a;
+            --bg-mid: #0a1128;
+            --bg-card: rgba(15, 25, 60, 0.6);
+            --neon-blue: #2979ff;
+            --neon-cyan: #00e5ff;
+            --neon-purple: #7c4dff;
+            --neon-pink: #ff4081;
+            --neon-yellow: #ffea00;
+            --text-primary: #eef2ff;
+            --text-secondary: #94a3cf;
+            --text-muted: #5a6a94;
+            --border-subtle: rgba(41, 121, 255, 0.12);
+            --glass: rgba(10, 17, 40, 0.65);
+            --glass-border: rgba(41, 121, 255, 0.15);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+        }
+
+        /* ============ ANIMATED BACKGROUND ============ */
+        .bg-scene {
+            position: fixed; inset: 0; z-index: -1; overflow: hidden;
+            pointer-events: none;
+        }
+        .bg-scene .orb {
+            position: absolute; border-radius: 50%; filter: blur(100px);
+            animation: float 12s ease-in-out infinite alternate;
+        }
+        .bg-scene .orb-1 {
+            width: 500px; height: 500px; top: -15%; left: -10%;
+            background: radial-gradient(circle, rgba(41,121,255,0.25), transparent 70%);
+        }
+        .bg-scene .orb-2 {
+            width: 400px; height: 400px; bottom: -10%; right: -8%;
+            background: radial-gradient(circle, rgba(124,77,255,0.2), transparent 70%);
+            animation-delay: -4s;
+        }
+        .bg-scene .orb-3 {
+            width: 300px; height: 300px; top: 40%; left: 50%;
+            background: radial-gradient(circle, rgba(0,229,255,0.1), transparent 70%);
+            animation-delay: -8s;
+        }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, -40px) scale(1.1); }
+        }
+
+        /* ============ SCROLLBAR ============ */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-blue); border-radius: 3px; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        body { -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
-        /* Smooth scrolling */
-        html { scroll-behavior: smooth; }
-    </style>
-    <script>
-        tailwind.config = { 
-            theme: { 
-                extend: { 
-                    colors: { 
-                        brand: '#ec4899',      /* Vibrant Pink */
-                        brandHover: '#db2777', /* Deep Pink */
-                        accent: '#8b5cf6',     /* Violet */
-                        darkbg: '#0f172a',     /* Deep Slate */
-                        panel: '#1e293b',      /* Light Slate */
-                        cardBorder: '#334155'  /* Border Color */
-                    } 
-                } 
-            } 
-        }
-    </script>
-</head>
-<body class="bg-darkbg text-slate-100 antialiased pb-24 selection:bg-brand selection:text-white relative min-h-screen">
 
-    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-brand/20 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-accent/20 rounded-full blur-[120px]"></div>
+        /* ============ NAVBAR ============ */
+        .navbar {
+            position: sticky; top: 0; z-index: 50;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 20px;
+            background: rgba(5, 10, 26, 0.75);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .navbar .logo-area {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .navbar .logo-icon {
+            width: 42px; height: 42px; border-radius: 14px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #fff;
+            box-shadow: 0 0 20px rgba(41,121,255,0.35);
+            animation: iconPulse 3s ease-in-out infinite;
+        }
+        @keyframes iconPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(41,121,255,0.35); }
+            50% { box-shadow: 0 0 30px rgba(41,121,255,0.55); }
+        }
+        .navbar .logo-text {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.3rem; font-weight: 700; color: #fff;
+            letter-spacing: -0.5px;
+        }
+        .navbar .logo-text span {
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .nav-actions { display: flex; align-items: center; gap: 12px; }
+
+        .live-tracker {
+            display: none; align-items: center; gap: 8px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 8px 16px; border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+        .live-tracker.visible { display: flex; }
+        .live-dot {
+            position: relative; width: 8px; height: 8px;
+        }
+        .live-dot::before {
+            content: ''; position: absolute; inset: 0;
+            background: var(--neon-cyan); border-radius: 50%;
+            animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;
+        }
+        .live-dot::after {
+            content: ''; position: absolute; inset: 0;
+            background: var(--neon-cyan); border-radius: 50%;
+        }
+        @keyframes ping {
+            75%, 100% { transform: scale(2.5); opacity: 0; }
+        }
+        .live-tracker span { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; }
+
+        .cart-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: #fff; border: none; padding: 10px 20px;
+            border-radius: 14px; font-family: 'Outfit', sans-serif;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 20px rgba(41,121,255,0.35);
+            transition: all 0.3s ease;
+        }
+        .cart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(41,121,255,0.5);
+        }
+        .cart-btn .badge {
+            background: rgba(255,255,255,0.2); padding: 2px 8px;
+            border-radius: 8px; font-size: 13px;
+        }
+
+        /* ============ HERO ============ */
+        .hero {
+            text-align: center; padding: 60px 20px 40px;
+            position: relative;
+        }
+        .hero-location {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--neon-cyan); font-size: 11px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px;
+        }
+        .hero h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(2.8rem, 8vw, 5rem);
+            font-weight: 700; line-height: 1.1; margin-bottom: 8px;
+            color: #fff;
+        }
+        .hero h2 .glow-text {
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: shimmer 4s linear infinite;
+            filter: drop-shadow(0 0 30px rgba(0,229,255,0.3));
+        }
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        .hero .tagline {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.1rem; color: var(--text-secondary);
+            margin-bottom: 28px; font-weight: 500;
+        }
+        .hero .tagline em {
+            color: var(--neon-pink); font-style: normal;
+        }
+        .wa-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(37, 211, 102, 0.1); color: #25d366;
+            border: 1px solid rgba(37, 211, 102, 0.3);
+            padding: 12px 28px; border-radius: 50px;
+            font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .wa-btn:hover {
+            background: #25d366; color: #fff;
+            box-shadow: 0 0 25px rgba(37, 211, 102, 0.4);
+        }
+
+        /* ============ COUPON BANNER ============ */
+        .coupon-banner {
+            display: none; max-width: 900px; margin: 0 auto 40px;
+            padding: 3px; border-radius: 20px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple), var(--neon-cyan));
+            box-shadow: 0 0 40px rgba(41,121,255,0.2);
+            animation: borderGlow 3s ease-in-out infinite alternate;
+        }
+        .coupon-banner.visible { display: block; }
+        @keyframes borderGlow {
+            0% { box-shadow: 0 0 20px rgba(41,121,255,0.2); }
+            100% { box-shadow: 0 0 40px rgba(124,77,255,0.3); }
+        }
+        .coupon-inner {
+            background: var(--bg-mid); padding: 20px 24px;
+            border-radius: 18px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .coupon-inner .offer-label {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--neon-cyan); margin-bottom: 8px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .coupon-inner .offer-label i { color: var(--neon-yellow); }
+        .coupon-inner h3 { font-size: 1.3rem; font-weight: 800; color: #fff; }
+        .coupon-inner h3 .code-pill {
+            display: inline-block; background: var(--neon-blue);
+            color: #fff; padding: 4px 14px; border-radius: 10px;
+            font-size: 0.9rem; margin-left: 8px; letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(41,121,255,0.4);
+        }
+        .coupon-inner .offer-desc {
+            font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 500;
+        }
+        .coupon-icon {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; color: #fff; flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(41,121,255,0.3);
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            max-width: 1000px; margin: 0 auto; padding: 0 16px;
+        }
+        .section-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.8rem; font-weight: 700; color: #fff;
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .section-title .emoji { font-size: 1.5rem; }
+
+        /* ============ FILTER PILLS ============ */
+        .filters {
+            display: flex; gap: 10px; overflow-x: auto;
+            padding-bottom: 16px; margin-bottom: 24px;
+        }
+        .filter-btn {
+            white-space: nowrap; padding: 10px 22px;
+            border-radius: 50px; border: 1px solid var(--border-subtle);
+            background: var(--glass); color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+        .filter-btn:hover {
+            color: #fff; border-color: var(--neon-blue);
+            background: rgba(41,121,255,0.08);
+        }
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: #fff; border-color: transparent;
+            box-shadow: 0 4px 20px rgba(41,121,255,0.3);
+        }
+
+        /* ============ MENU GRID ============ */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .menu-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px; padding: 22px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            transition: all 0.35s ease;
+            position: relative; overflow: hidden;
+        }
+        .menu-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 3px; background: linear-gradient(90deg, var(--neon-blue), var(--neon-cyan));
+            opacity: 0; transition: opacity 0.35s ease;
+        }
+        .menu-card:hover {
+            border-color: rgba(41,121,255,0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 40px rgba(41,121,255,0.12);
+        }
+        .menu-card:hover::before { opacity: 1; }
+
+        .card-category {
+            display: flex; align-items: center; gap: 6px;
+            margin-bottom: 8px;
+        }
+        .card-category .dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 8px var(--neon-cyan);
+        }
+        .card-category span {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--text-muted);
+        }
+        .card-name {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.15rem; font-weight: 600; color: #fff;
+            margin-bottom: 6px; line-height: 1.3;
+        }
+        .card-price {
+            font-size: 1.3rem; font-weight: 800;
+            color: var(--neon-cyan); margin-bottom: 16px;
+            text-shadow: 0 0 15px rgba(0,229,255,0.3);
+        }
+        .add-btn {
+            width: 100%; padding: 11px;
+            border-radius: 14px; border: 1px solid var(--border-subtle);
+            background: rgba(41,121,255,0.06);
+            color: #fff; font-family: 'Outfit', sans-serif;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.3s ease;
+        }
+        .add-btn:hover {
+            background: var(--neon-blue); border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(41,121,255,0.4);
+        }
+        .add-btn.added {
+            background: #00c853 !important; border-color: #00c853 !important;
+            box-shadow: 0 0 20px rgba(0,200,83,0.4) !important;
+        }
+
+        /* ============ FOOTER ============ */
+        .site-footer {
+            max-width: 1000px; margin: 80px auto 0; padding: 0 16px;
+            text-align: center;
+        }
+        .footer-card {
+            display: inline-block; padding: 3px; border-radius: 22px;
+            background: linear-gradient(135deg, rgba(41,121,255,0.2), rgba(124,77,255,0.2));
+            margin-bottom: 24px;
+        }
+        .footer-inner {
+            background: var(--bg-mid); border-radius: 20px;
+            padding: 28px 32px; text-align: left;
+            max-width: 420px;
+        }
+        .footer-inner h3 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 20px;
+        }
+        .footer-row {
+            display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px;
+        }
+        .footer-row .icon-box {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg-deep); color: var(--neon-cyan); font-size: 14px;
+            flex-shrink: 0;
+        }
+        .footer-row p {
+            font-size: 13px; color: var(--text-secondary); line-height: 1.5;
+        }
+        .footer-row .highlight { color: #fff; font-weight: 700; }
+        .copyright {
+            font-size: 11px; color: var(--text-muted); font-weight: 500;
+        }
+
+        /* ============ CART MODAL ============ */
+        .cart-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(5,10,26,0.8);
+            backdrop-filter: blur(8px);
+            display: none; justify-content: flex-end;
+        }
+        .cart-overlay.open { display: flex; }
+
+        .cart-panel {
+            width: 100%; max-width: 480px; height: 100%;
+            background: var(--bg-mid);
+            border-left: 1px solid var(--glass-border);
+            box-shadow: -20px 0 60px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .cart-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+            background: rgba(10,17,40,0.9);
+            backdrop-filter: blur(20px);
+        }
+        .cart-header h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.4rem; font-weight: 700; color: #fff;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .cart-header h2 i { color: var(--neon-cyan); }
+        .close-cart {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-deep); color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 16px;
+            transition: all 0.2s;
+        }
+        .close-cart:hover { color: #fff; border-color: var(--neon-blue); }
+
+        .cart-body {
+            flex: 1; overflow-y: auto; padding: 24px;
+        }
+        .cart-body .empty-cart {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 200px; color: var(--text-muted);
+        }
+        .cart-body .empty-cart .empty-icon {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: var(--bg-deep); border: 1px solid var(--border-subtle);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; margin-bottom: 16px;
+        }
+
+        .cart-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-deep); padding: 14px 16px;
+            border-radius: 16px; border: 1px solid var(--border-subtle);
+            margin-bottom: 12px;
+        }
+        .cart-item-info h4 {
+            font-weight: 700; color: #fff; font-size: 14px; margin-bottom: 4px;
+        }
+        .cart-item-info .item-price {
+            color: var(--neon-cyan); font-weight: 800; font-size: 15px;
+        }
+        .qty-controls {
+            display: flex; align-items: center; gap: 0;
+            background: var(--bg-mid); border-radius: 12px;
+            border: 1px solid var(--border-subtle); padding: 3px;
+        }
+        .qty-btn {
+            width: 32px; height: 32px; border-radius: 10px;
+            border: none; background: transparent;
+            color: var(--text-secondary); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; transition: all 0.2s;
+        }
+        .qty-btn:hover { color: #fff; background: rgba(41,121,255,0.15); }
+        .qty-btn.minus:hover { background: rgba(255,64,129,0.15); color: var(--neon-pink); }
+        .qty-count { width: 28px; text-align: center; font-weight: 800; color: #fff; font-size: 14px; }
+
+        /* ============ CHECKOUT FORM ============ */
+        .checkout-form { display: none; }
+        .checkout-form.visible { display: block; }
+        .checkout-section {
+            background: rgba(5,10,26,0.5); border: 1px solid var(--border-subtle);
+            padding: 20px; border-radius: 18px; margin-bottom: 16px;
+        }
+        .checkout-section .section-label {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--neon-cyan); margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .checkout-section .section-label i { font-size: 12px; }
+
+        .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .type-btn {
+            padding: 14px; border-radius: 14px;
+            font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s ease;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-deep); color: var(--text-muted);
+        }
+        .type-btn.selected {
+            border-color: var(--neon-blue);
+            background: rgba(41,121,255,0.1);
+            color: #fff;
+            box-shadow: inset 0 0 20px rgba(41,121,255,0.1);
+        }
+
+        .form-input {
+            width: 100%; padding: 14px 16px;
+            background: var(--bg-deep); border: 1px solid var(--border-subtle);
+            border-radius: 14px; color: #fff;
+            font-family: 'Outfit', sans-serif; font-size: 14px;
+            outline: none; transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+        .form-input::placeholder { color: var(--text-muted); }
+        .form-input:focus { border-color: var(--neon-blue); box-shadow: 0 0 0 3px rgba(41,121,255,0.1); }
+        .form-input:disabled { color: var(--text-muted); opacity: 0.6; }
+        .form-row { display: grid; gap: 10px; }
+        .form-row-2 { grid-template-columns: 1fr 1fr; }
+        .form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+        .payment-option {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 14px; border-radius: 14px;
+            border: 1px solid rgba(0,200,83,0.3);
+            background: rgba(0,200,83,0.06);
+            color: #4caf50; font-weight: 700; font-size: 14px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .payment-option:hover { background: rgba(0,200,83,0.12); }
+        .payment-option input { display: none; }
+        .payment-disabled {
+            border-color: var(--border-subtle);
+            background: var(--bg-deep);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .address-section { display: none; }
+        .address-section.visible { display: block; }
+        .payment-section-dinein { }
+        .payment-section-delivery { display: none; }
+
+        /* ============ CART FOOTER ============ */
+        .cart-footer {
+            padding: 20px 24px;
+            background: rgba(5,10,26,0.9);
+            border-top: 1px solid var(--border-subtle);
+            backdrop-filter: blur(20px);
+        }
+        .total-row {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 16px;
+        }
+        .total-row .label { color: var(--text-secondary); font-weight: 500; }
+        .total-row .amount {
+            font-size: 2rem; font-weight: 900; color: #fff;
+            letter-spacing: -1px;
+        }
+        .original-total {
+            display: none; font-size: 13px;
+            color: var(--neon-pink); text-decoration: line-through;
+            font-weight: 700; margin-bottom: 4px; text-align: right;
+            background: rgba(255,64,129,0.1); padding: 2px 8px;
+            border-radius: 6px;
+        }
+        .original-total.visible { display: inline-block; }
+
+        .checkout-btn {
+            width: 100%; padding: 16px;
+            border-radius: 16px; border: none;
+            font-family: 'Outfit', sans-serif; font-size: 16px;
+            font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-proceed {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: #fff;
+            box-shadow: 0 4px 25px rgba(41,121,255,0.35);
+        }
+        .btn-proceed:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 35px rgba(41,121,255,0.5);
+        }
+        .btn-confirm {
+            display: none;
+            background: linear-gradient(135deg, #00c853, #009624);
+            color: #fff;
+            box-shadow: 0 4px 25px rgba(0,200,83,0.35);
+        }
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 35px rgba(0,200,83,0.5);
+        }
+        .btn-confirm.visible { display: flex; }
+        .btn-proceed.hidden { display: none; }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 640px) {
+            .navbar .logo-text { display: none; }
+            .menu-grid { grid-template-columns: 1fr; }
+            .hero h2 { font-size: 2.5rem; }
+            .cart-panel { max-width: 100%; }
+            .coupon-inner { flex-direction: column; gap: 16px; text-align: center; }
+            .coupon-icon { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-scene">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
     </div>
 
-    <nav class="flex justify-between items-center px-5 md:px-8 py-4 border-b border-white/5 sticky top-0 bg-darkbg/70 backdrop-blur-xl z-40 shadow-lg shadow-black/20">
-        <div class="flex items-center gap-3">
-            <div class="bg-gradient-to-br from-brand to-accent p-2 rounded-xl text-white shadow-lg shadow-brand/30">
-                <i class="fa-solid fa-ice-cream text-xl"></i>
-            </div>
-            <h1 class="text-xl font-extrabold tracking-tight text-white hidden md:block">Freezing Point</h1>
+    <nav class="navbar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fa-solid fa-ice-cream"></i></div>
+            <div class="logo-text"><span>Freezing</span> Point</div>
         </div>
-        
-        <div class="flex items-center gap-3 md:gap-5">
-            <div id="nav-live-tracker" class="hidden flex items-center gap-2 bg-panel/80 border border-white/10 px-4 py-2 rounded-full shadow-lg shadow-black/50 backdrop-blur-md">
-                <span class="relative flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand"></span>
-                </span>
-                <span id="nav-tracking-status" class="text-xs font-bold text-white whitespace-nowrap">Fetching...</span>
+        <div class="nav-actions">
+            <div id="nav-live-tracker" class="live-tracker">
+                <div class="live-dot"></div>
+                <span id="nav-tracking-status">Fetching...</span>
             </div>
-
-            <button onclick="toggleCart()" class="bg-gradient-to-r from-brand to-brandHover text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all transform hover:-translate-y-0.5">
-                <i class="fa-solid fa-cart-shopping"></i> 
-                <span id="cart-count" class="bg-white/20 px-2 py-0.5 rounded-md text-sm">0</span>
+            <button onclick="toggleCart()" class="cart-btn">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span id="cart-count" class="badge">0</span>
             </button>
         </div>
     </nav>
 
-    <header class="text-center py-16 px-4 relative overflow-hidden">
-        <div class="relative z-10 max-w-2xl mx-auto">
-            <p class="text-brand font-black tracking-[0.2em] uppercase text-xs mb-4 flex items-center justify-center gap-2">
-                <i class="fas fa-map-marker-alt"></i> Shop 6, Swapna Nagari, Kalyan
-            </p>
-            <h2 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight text-white drop-shadow-lg">
-                Taste The <br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand via-pink-400 to-accent animate-pulse">Freezing Point</span>
-            </h2>
-            <a href="https://wa.me/919960840470" target="_blank" class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-6 py-3 rounded-full font-bold hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10">
-                <i class="fa-brands fa-whatsapp text-lg"></i> Order on WhatsApp
-            </a>
-        </div>
+    <header class="hero">
+        <p class="hero-location"><i class="fas fa-map-marker-alt"></i> Shop 6, Swapna Nagari, Kalyan</p>
+        <h2>
+            Taste The<br>
+            <span class="glow-text">Freezing Point</span>
+        </h2>
+        <p class="tagline">mastani · thick shakes · falooda · <em>happiness</em> 🍨</p>
+        <a href="https://wa.me/919960840470" target="_blank" class="wa-btn">
+            <i class="fa-brands fa-whatsapp" style="font-size:18px"></i> Order on WhatsApp
+        </a>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 lg:px-0">
-        
-        <div id="live-coupon-banner" class="hidden bg-gradient-to-r from-brand to-accent text-white p-1 rounded-2xl mb-10 shadow-[0_0_30px_rgba(139,92,246,0.3)] transform transition-all hover:scale-[1.01]">
-            <div class="bg-darkbg/40 backdrop-blur-sm p-5 rounded-xl flex justify-between items-center h-full">
+    <main class="main-content">
+
+        <div id="live-coupon-banner" class="coupon-banner">
+            <div class="coupon-inner">
                 <div>
-                    <p class="text-xs font-bold uppercase tracking-widest text-pink-200 mb-2 flex items-center gap-1"><i class="fas fa-bolt text-yellow-300"></i> Special Offer</p>
-                    <h3 class="font-extrabold text-2xl mb-1">Code: <span id="display-code" class="bg-white text-brand px-3 py-1 rounded-lg text-lg ml-2 uppercase tracking-wider shadow-inner">...</span></h3>
-                    <p id="display-desc" class="text-sm text-pink-100 font-medium">Loading offer...</p>
+                    <p class="offer-label"><i class="fas fa-bolt"></i> Special Offer</p>
+                    <h3>Code: <span id="display-code" class="code-pill">...</span></h3>
+                    <p id="display-desc" class="offer-desc">Loading offer...</p>
                 </div>
-                <div class="bg-white/20 p-4 rounded-full flex items-center justify-center shrink-0 backdrop-blur-md border border-white/30">
-                    <i class="fas fa-tags text-3xl text-white drop-shadow-md"></i>
-                </div>
+                <div class="coupon-icon"><i class="fas fa-tags"></i></div>
             </div>
         </div>
 
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-3xl font-extrabold text-white">Explore Menu</h2>
+        <h2 class="section-title"><span class="emoji">🍧</span> Menu</h2>
+
+        <div class="filters hide-scrollbar">
+            <button onclick="filterMenu('All')" class="filter-btn active">All Items</button>
+            <button onclick="filterMenu('Mastani')" class="filter-btn">Mastani</button>
+            <button onclick="filterMenu('Thick Milkshakes')" class="filter-btn">Thick Shakes</button>
+            <button onclick="filterMenu('Crunch Milkshakes')" class="filter-btn">Crunch Shakes</button>
+            <button onclick="filterMenu('Falooda')" class="filter-btn">Falooda</button>
+            <button onclick="filterMenu('Cold Coffee')" class="filter-btn">Cold Coffee</button>
         </div>
 
-        <div class="flex gap-3 mb-8 overflow-x-auto pb-4 hide-scrollbar snap-x">
-            <button onclick="filterMenu('All')" class="filter-btn active snap-start bg-gradient-to-r from-brand to-accent text-white px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap shadow-lg shadow-brand/20 border border-transparent">All Items</button>
-            <button onclick="filterMenu('Mastani')" class="filter-btn snap-start bg-panel text-slate-300 hover:text-white px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap border border-white/5 hover:bg-slate-700 transition">Mastani</button>
-            <button onclick="filterMenu('Thick Milkshakes')" class="filter-btn snap-start bg-panel text-slate-300 hover:text-white px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap border border-white/5 hover:bg-slate-700 transition">Thick Shakes</button>
-            <button onclick="filterMenu('Crunch Milkshakes')" class="filter-btn snap-start bg-panel text-slate-300 hover:text-white px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap border border-white/5 hover:bg-slate-700 transition">Crunch Shakes</button>
-            <button onclick="filterMenu('Falooda')" class="filter-btn snap-start bg-panel text-slate-300 hover:text-white px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap border border-white/5 hover:bg-slate-700 transition">Falooda</button>
-            <button onclick="filterMenu('Cold Coffee')" class="filter-btn snap-start bg-panel text-slate-300 hover:text-white px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap border border-white/5 hover:bg-slate-700 transition">Cold Coffee</button>
-        </div>
+        <div class="menu-grid" id="menu-grid"></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="menu-grid"></div>
-
-        <footer class="mt-20 mb-10 pt-10 border-t border-white/10 text-center">
-            <div class="inline-block p-2 rounded-2xl bg-gradient-to-br from-brand/20 to-accent/20 mb-6">
-                <div class="bg-panel rounded-xl p-6 border border-white/5 text-left w-full max-w-md backdrop-blur-sm">
-                    <h3 class="text-2xl font-extrabold text-white mb-6">The Freezing Point</h3>
-                    <div class="flex items-start gap-4 mb-5">
-                        <div class="bg-darkbg p-2.5 rounded-lg text-brand"><i class="fas fa-map-marker-alt"></i></div>
-                        <p class="text-sm text-slate-400 leading-relaxed">Shop 6, Swapna Nagari Building, West, Near D-Mart, Godrej Hill, Khadakpada, Kalyan</p>
+        <footer class="site-footer">
+            <div class="footer-card">
+                <div class="footer-inner">
+                    <h3>🧊 The Freezing Point</h3>
+                    <div class="footer-row">
+                        <div class="icon-box"><i class="fas fa-map-marker-alt"></i></div>
+                        <p>Shop 6, Swapna Nagari Building, West, Near D-Mart, Godrej Hill, Khadakpada, Kalyan</p>
                     </div>
-                    <div class="flex items-center gap-4 mb-6">
-                        <div class="bg-darkbg p-2.5 rounded-lg text-accent"><i class="fas fa-clock"></i></div>
-                        <p class="text-sm text-white font-bold">Open Daily: 2:00 PM - 2:00 AM</p>
+                    <div class="footer-row">
+                        <div class="icon-box"><i class="fas fa-clock"></i></div>
+                        <p class="highlight">Open Daily: 2:00 PM – 2:00 AM</p>
                     </div>
                 </div>
             </div>
-            <p class="text-xs text-slate-600 font-medium">© 2024 The Freezing Point. All rights reserved.</p>
+            <p class="copyright">© 2024 The Freezing Point. All rights reserved.</p>
         </footer>
     </main>
 
-    <div id="cart-modal" class="fixed inset-0 bg-darkbg/80 backdrop-blur-md hidden z-50 flex justify-end transition-opacity duration-300">
-        <div class="bg-panel w-full md:w-[480px] h-full flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.5)] border-l border-white/10 overflow-hidden">
-            
-            <div class="px-6 py-5 bg-panel/90 backdrop-blur-xl z-10 flex justify-between items-center border-b border-white/5">
-                <h2 class="text-2xl font-extrabold text-white flex items-center gap-2"><i class="fas fa-shopping-bag text-brand"></i> Your Cart</h2>
-                <button onclick="toggleCart()" class="bg-darkbg text-slate-400 hover:text-white w-10 h-10 rounded-full flex items-center justify-center transition border border-white/5 hover:border-white/20"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div id="cart-modal" class="cart-overlay">
+        <div class="cart-panel">
+            <div class="cart-header">
+                <h2><i class="fas fa-shopping-bag"></i> Your Cart</h2>
+                <button onclick="toggleCart()" class="close-cart"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <div class="p-6 flex-1 flex flex-col overflow-y-auto hide-scrollbar bg-gradient-to-b from-panel to-darkbg">
-                
-                <div id="cart-items" class="flex-1 space-y-4 mb-8"></div>
+            <div class="cart-body">
+                <div id="cart-items"></div>
 
-                <div id="checkout-form" class="hidden flex-1 space-y-8 animate-fade-in">
-                    
-                    <div class="bg-darkbg/50 border border-white/5 p-5 rounded-2xl">
-                        <p class="text-[10px] text-brand uppercase tracking-widest mb-4 font-black flex items-center gap-2"><i class="fas fa-utensils"></i> 1. Order Type</p>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button type="button" id="type-dinein" onclick="setOrderType('dine_in')" class="border border-brand bg-brand/10 text-white py-3.5 rounded-xl font-bold transition shadow-inner shadow-brand/20">Pickup / Dine-In</button>
-                            <button type="button" id="type-delivery" onclick="setOrderType('delivery')" class="border border-cardBorder bg-darkbg text-slate-400 py-3.5 rounded-xl font-bold hover:border-slate-500 transition">Delivery</button>
+                <div id="checkout-form" class="checkout-form">
+                    <div class="checkout-section">
+                        <p class="section-label"><i class="fas fa-utensils"></i> 1. Order Type</p>
+                        <div class="type-grid">
+                            <button type="button" id="type-dinein" onclick="setOrderType('dine_in')" class="type-btn selected">Pickup / Dine-In</button>
+                            <button type="button" id="type-delivery" onclick="setOrderType('delivery')" class="type-btn">Delivery</button>
                         </div>
                     </div>
 
-                    <div class="bg-darkbg/50 border border-white/5 p-5 rounded-2xl">
-                        <p class="text-[10px] text-brand uppercase tracking-widest mb-4 font-black flex items-center gap-2"><i class="fas fa-user"></i> 2. Details</p>
-                        <div class="space-y-3">
-                            <input type="text" id="cust-name" placeholder="Full Name" class="w-full bg-panel border border-cardBorder rounded-xl px-4 py-3.5 text-white outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder:text-slate-500">
-                            <input type="tel" id="cust-phone" placeholder="Phone Number" class="w-full bg-panel border border-cardBorder rounded-xl px-4 py-3.5 text-white outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder:text-slate-500">
+                    <div class="checkout-section">
+                        <p class="section-label"><i class="fas fa-user"></i> 2. Details</p>
+                        <input type="text" id="cust-name" placeholder="Full Name" class="form-input">
+                        <input type="tel" id="cust-phone" placeholder="Phone Number" class="form-input">
+                    </div>
+
+                    <div id="address-section" class="checkout-section address-section">
+                        <p class="section-label" style="color: var(--neon-purple)"><i class="fas fa-motorcycle"></i> Delivery Address</p>
+                        <div class="form-row form-row-2">
+                            <input type="text" id="addr-flat" placeholder="Flat/Floor No." class="form-input">
+                            <input type="text" id="addr-bldg" placeholder="Building Name" class="form-input">
+                        </div>
+                        <input type="text" id="addr-street" placeholder="Street Address" class="form-input">
+                        <div class="form-row form-row-3">
+                            <input type="text" id="addr-city" value="Kalyan" disabled class="form-input">
+                            <input type="text" id="addr-state" value="MH" disabled class="form-input">
+                            <input type="text" id="addr-pin" placeholder="Pincode" class="form-input">
                         </div>
                     </div>
 
-                    <div id="address-section" class="hidden bg-darkbg/50 border border-accent/30 p-5 rounded-2xl shadow-[0_0_15px_rgba(139,92,246,0.1)]">
-                        <p class="text-[10px] text-accent uppercase tracking-widest mb-4 font-black flex items-center gap-2"><i class="fas fa-motorcycle"></i> Delivery Address</p>
-                        <div class="space-y-3">
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="text" id="addr-flat" placeholder="Flat/Floor No." class="w-full bg-panel border border-cardBorder rounded-xl px-4 py-3 text-white outline-none focus:border-accent text-sm placeholder:text-slate-500">
-                                <input type="text" id="addr-bldg" placeholder="Building Name" class="w-full bg-panel border border-cardBorder rounded-xl px-4 py-3 text-white outline-none focus:border-accent text-sm placeholder:text-slate-500">
+                    <div class="checkout-section">
+                        <p class="section-label"><i class="fas fa-wallet"></i> 3. Payment</p>
+                        <div id="payment-dinein" class="payment-section-dinein">
+                            <div class="payment-option payment-disabled" style="margin-bottom:10px; cursor:not-allowed;">
+                                <i class="fas fa-credit-card"></i> Pay Online (Soon)
                             </div>
-                            <input type="text" id="addr-street" placeholder="Street Address" class="w-full bg-panel border border-cardBorder rounded-xl px-4 py-3 text-white outline-none focus:border-accent text-sm placeholder:text-slate-500">
-                            <div class="grid grid-cols-3 gap-3">
-                                <input type="text" id="addr-city" value="Kalyan" disabled class="w-full bg-darkbg border border-cardBorder/50 rounded-xl px-3 py-3 text-slate-500 text-sm font-bold">
-                                <input type="text" id="addr-state" value="MH" disabled class="w-full bg-darkbg border border-cardBorder/50 rounded-xl px-3 py-3 text-slate-500 text-sm font-bold">
-                                <input type="text" id="addr-pin" placeholder="Pincode" class="w-full bg-panel border border-cardBorder rounded-xl px-3 py-3 text-white outline-none focus:border-accent text-sm placeholder:text-slate-500">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-darkbg/50 border border-white/5 p-5 rounded-2xl">
-                        <p class="text-[10px] text-brand uppercase tracking-widest mb-4 font-black flex items-center gap-2"><i class="fas fa-wallet"></i> 3. Payment</p>
-                        <div id="payment-dinein" class="space-y-3">
-                            <button type="button" disabled class="w-full border border-cardBorder bg-darkbg text-slate-600 py-3.5 rounded-xl font-bold cursor-not-allowed flex justify-center items-center gap-2"><i class="fas fa-credit-card"></i> Pay Online (Soon)</button>
-                            <label class="w-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-400 py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 cursor-pointer shadow-inner shadow-emerald-500/10 transition hover:bg-emerald-500/20">
-                                <input type="radio" name="payment" value="Cash on Visit" checked class="hidden"> <i class="fas fa-money-bill-wave"></i> Pay on Visit
+                            <label class="payment-option">
+                                <input type="radio" name="payment" value="Cash on Visit" checked> <i class="fas fa-money-bill-wave"></i> Pay on Visit
                             </label>
                         </div>
-                        <div id="payment-delivery" class="hidden space-y-3">
-                            <label class="w-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-400 py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 cursor-pointer shadow-inner shadow-emerald-500/10 transition hover:bg-emerald-500/20">
-                                <input type="radio" name="payment" value="Cash/UPI on Delivery" checked class="hidden"> <i class="fas fa-qrcode"></i> Cash / UPI on Delivery
+                        <div id="payment-delivery" class="payment-section-delivery">
+                            <label class="payment-option">
+                                <input type="radio" name="payment" value="Cash/UPI on Delivery" checked> <i class="fas fa-qrcode"></i> Cash / UPI on Delivery
                             </label>
                         </div>
                     </div>
-
                 </div>
+            </div>
 
-                <div class="border-t border-white/10 pt-6 mt-auto bg-darkbg/50 -mx-6 -mb-6 p-6">
-                    <div class="flex justify-between items-end mb-6">
-                        <span class="text-slate-400 font-medium">Grand Total</span>
-                        <div class="text-right flex flex-col items-end">
-                            <span id="original-total" class="text-sm text-brand line-through hidden mb-1 font-bold bg-brand/10 px-2 rounded">₹0</span>
-                            <span class="text-white text-3xl font-black tracking-tight">₹<span id="cart-total">0</span></span>
-                        </div>
+            <div class="cart-footer">
+                <div class="total-row">
+                    <span class="label">Grand Total</span>
+                    <div style="text-align:right">
+                        <span id="original-total" class="original-total">₹0</span>
+                        <div class="amount">₹<span id="cart-total">0</span></div>
                     </div>
-                    <button id="btn-proceed" onclick="showCheckout()" class="w-full bg-gradient-to-r from-brand to-brandHover text-white py-4.5 rounded-xl font-bold text-lg hover:shadow-[0_0_25px_rgba(236,72,153,0.5)] transition-all transform hover:-translate-y-1 h-14 flex items-center justify-center">Continue to Checkout <i class="fas fa-arrow-right ml-2"></i></button>
-                    <button id="btn-confirm" onclick="confirmOrder()" class="hidden w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4.5 rounded-xl font-bold text-lg hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-all transform hover:-translate-y-1 h-14 flex items-center justify-center"><i class="fas fa-check-circle mr-2"></i> Place Order Now</button>
                 </div>
+                <button id="btn-proceed" onclick="showCheckout()" class="checkout-btn btn-proceed">
+                    Continue to Checkout <i class="fas fa-arrow-right"></i>
+                </button>
+                <button id="btn-confirm" onclick="confirmOrder()" class="checkout-btn btn-confirm">
+                    <i class="fas fa-check-circle"></i> Place Order Now
+                </button>
             </div>
         </div>
     </div>
@@ -270,7 +828,7 @@
 
         let cart = [];
         let currentFilter = 'All';
-        let activeCoupon = null; 
+        let activeCoupon = null;
         let discountApplied = 0;
         let selectedOrderType = 'dine_in';
 
@@ -283,18 +841,18 @@
             const payDine = document.getElementById('payment-dinein');
             const payDel = document.getElementById('payment-delivery');
 
-            if(type === 'dine_in') {
-                btnDine.className = "border border-brand bg-brand/10 text-white py-3.5 rounded-xl font-bold transition shadow-inner shadow-brand/20";
-                btnDel.className = "border border-cardBorder bg-darkbg text-slate-400 py-3.5 rounded-xl font-bold hover:border-slate-500 transition";
-                addrSec.classList.add('hidden');
-                payDine.classList.remove('hidden');
-                payDel.classList.add('hidden');
+            if (type === 'dine_in') {
+                btnDine.classList.add('selected');
+                btnDel.classList.remove('selected');
+                addrSec.classList.remove('visible');
+                payDine.style.display = '';
+                payDel.style.display = 'none';
             } else {
-                btnDel.className = "border border-accent bg-accent/10 text-white py-3.5 rounded-xl font-bold transition shadow-inner shadow-accent/20";
-                btnDine.className = "border border-cardBorder bg-darkbg text-slate-400 py-3.5 rounded-xl font-bold hover:border-slate-500 transition";
-                addrSec.classList.remove('hidden');
-                payDine.classList.add('hidden');
-                payDel.classList.remove('hidden');
+                btnDel.classList.add('selected');
+                btnDine.classList.remove('selected');
+                addrSec.classList.add('visible');
+                payDine.style.display = 'none';
+                payDel.style.display = '';
             }
         }
 
@@ -305,28 +863,28 @@
                 activeCoupon = doc.data();
                 document.getElementById('display-code').innerText = activeCoupon.code;
                 document.getElementById('display-desc').innerText = `Apply code at checkout for ${activeCoupon.discount}% off!`;
-                banner.classList.remove('hidden');
+                banner.classList.add('visible');
             } else {
                 activeCoupon = null;
-                banner.classList.add('hidden');
+                banner.classList.remove('visible');
             }
         });
 
         // LIVE TRACKING
         function checkActiveOrder() {
             const activeOrderId = localStorage.getItem('fp_active_order');
-            if(activeOrderId) {
-                document.getElementById('nav-live-tracker').classList.remove('hidden');
-                
+            if (activeOrderId) {
+                document.getElementById('nav-live-tracker').classList.add('visible');
+
                 db.collection("orders").doc(activeOrderId).onSnapshot((doc) => {
-                    if(doc.exists) {
+                    if (doc.exists) {
                         const data = doc.data();
                         const statusTxt = document.getElementById('nav-tracking-status');
-                        
-                        if(data.status === 'PENDING') { statusTxt.innerHTML = "Order Sent to Kitchen"; }
-                        else if(data.status === 'PREPARING') { statusTxt.innerHTML = `<span class="text-yellow-400"><i class="fas fa-fire mr-1"></i> Cooking (${data.eta}m)</span>`; }
-                        else if(data.status === 'READY') { statusTxt.innerHTML = `<span class="text-emerald-400"><i class="fas fa-check-circle mr-1"></i> Ready for Pickup</span>`; }
-                        else if(data.status === 'OUT_FOR_DELIVERY') { statusTxt.innerHTML = `<span class="text-blue-400"><i class="fas fa-motorcycle mr-1"></i> Out for Delivery</span>`; }
+
+                        if (data.status === 'PENDING') { statusTxt.innerHTML = "Order Sent to Kitchen"; }
+                        else if (data.status === 'PREPARING') { statusTxt.innerHTML = `<span style="color:var(--neon-yellow)"><i class="fas fa-fire" style="margin-right:4px"></i>Cooking (${data.eta}m)</span>`; }
+                        else if (data.status === 'READY') { statusTxt.innerHTML = `<span style="color:#4caf50"><i class="fas fa-check-circle" style="margin-right:4px"></i>Ready for Pickup</span>`; }
+                        else if (data.status === 'OUT_FOR_DELIVERY') { statusTxt.innerHTML = `<span style="color:var(--neon-cyan)"><i class="fas fa-motorcycle" style="margin-right:4px"></i>Out for Delivery</span>`; }
                     }
                 });
             }
@@ -337,16 +895,18 @@
             const grid = document.getElementById('menu-grid');
             const filteredProducts = currentFilter === 'All' ? products : products.filter(p => p.category === currentFilter);
             grid.innerHTML = filteredProducts.map(p => `
-                <div class="bg-panel/40 backdrop-blur-md border border-white/5 rounded-3xl p-5 hover:border-brand/30 hover:bg-panel/60 transition-all duration-300 group relative shadow-lg shadow-black/20 hover:shadow-[0_0_25px_rgba(236,72,153,0.1)] flex flex-col justify-between">
+                <div class="menu-card">
                     <div>
-                        <div class="flex items-center gap-1.5 mb-2">
-                            <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${p.category}</p>
+                        <div class="card-category">
+                            <div class="dot"></div>
+                            <span>${p.category}</span>
                         </div>
-                        <h3 class="font-extrabold text-white text-lg leading-tight mb-2">${p.name}</h3>
-                        <span class="text-brand font-black text-xl mb-4 block">₹${p.price}</span>
+                        <h3 class="card-name">${p.name}</h3>
+                        <span class="card-price">₹${p.price}</span>
                     </div>
-                    <button onclick="addToCart(${p.id}, this)" class="w-full bg-darkbg border border-white/5 text-white hover:bg-brand hover:border-brand hover:shadow-[0_0_15px_rgba(236,72,153,0.4)] py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex justify-center items-center gap-2"><i class="fas fa-plus text-xs"></i> ADD TO CART</button>
+                    <button onclick="addToCart(${p.id}, this)" class="add-btn">
+                        <i class="fas fa-plus" style="font-size:11px"></i> ADD TO CART
+                    </button>
                 </div>
             `).join('');
         }
@@ -354,11 +914,11 @@
         function filterMenu(category) {
             currentFilter = category;
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                if(btn.innerText === category || (category === 'All' && btn.innerText === 'All Items')) {
-                    btn.className = "filter-btn active snap-start bg-gradient-to-r from-brand to-accent text-white px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap shadow-lg shadow-brand/20 border border-transparent";
-                } else {
-                    btn.className = "filter-btn snap-start bg-panel text-slate-300 hover:text-white px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap border border-white/5 hover:bg-slate-700 transition";
-                }
+                const match = btn.innerText === category ||
+                    (category === 'All' && btn.innerText === 'All Items') ||
+                    (category === 'Thick Milkshakes' && btn.innerText === 'Thick Shakes') ||
+                    (category === 'Crunch Milkshakes' && btn.innerText === 'Crunch Shakes');
+                btn.classList.toggle('active', match);
             });
             renderMenu();
         }
@@ -369,25 +929,23 @@
             if (existing) existing.qty++;
             else cart.push({ ...product, qty: 1 });
             updateCartUI();
-            
+
             const originalHTML = btnElement.innerHTML;
             btnElement.innerHTML = "<i class='fas fa-check'></i> ADDED";
-            btnElement.classList.add("bg-emerald-500", "border-emerald-500", "text-white", "shadow-[0_0_15px_rgba(16,185,129,0.4)]");
-            btnElement.classList.remove("bg-darkbg", "hover:bg-brand", "hover:border-brand");
-            
+            btnElement.classList.add('added');
+
             setTimeout(() => {
                 btnElement.innerHTML = originalHTML;
-                btnElement.classList.remove("bg-emerald-500", "border-emerald-500", "text-white", "shadow-[0_0_15px_rgba(16,185,129,0.4)]");
-                btnElement.classList.add("bg-darkbg", "hover:bg-brand", "hover:border-brand");
+                btnElement.classList.remove('added');
             }, 800);
         }
 
         function updateCartUI() {
             const count = cart.reduce((sum, item) => sum + item.qty, 0);
             document.getElementById('cart-count').innerText = count;
-            
+
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            
+
             // Auto apply active coupon if it exists
             if (activeCoupon) {
                 discountApplied = Math.floor(subtotal * (activeCoupon.discount / 100));
@@ -397,34 +955,35 @@
 
             const finalTotal = subtotal - discountApplied;
             document.getElementById('cart-total').innerText = finalTotal > 0 ? finalTotal : 0;
-            
-            if(discountApplied > 0) {
-                document.getElementById('original-total').innerText = `₹${subtotal}`;
-                document.getElementById('original-total').classList.remove('hidden');
+
+            const origEl = document.getElementById('original-total');
+            if (discountApplied > 0) {
+                origEl.innerText = `₹${subtotal}`;
+                origEl.classList.add('visible');
             } else {
-                document.getElementById('original-total').classList.add('hidden');
+                origEl.classList.remove('visible');
             }
 
             const cartItemsContainer = document.getElementById('cart-items');
             if (cart.length === 0) {
                 cartItemsContainer.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-48 text-slate-500">
-                        <div class="w-16 h-16 bg-darkbg rounded-full flex items-center justify-center mb-4 border border-white/5"><i class="fas fa-shopping-basket text-2xl"></i></div>
-                        <p class="font-medium">Your cart is empty.</p>
+                    <div class="empty-cart">
+                        <div class="empty-icon"><i class="fas fa-shopping-basket"></i></div>
+                        <p style="font-weight:600">Your cart is empty</p>
                     </div>`;
                 return;
             }
 
             cartItemsContainer.innerHTML = cart.map(item => `
-                <div class="flex justify-between items-center bg-darkbg/60 p-4 rounded-2xl border border-white/5 shadow-sm">
-                    <div class="flex-1 pr-4">
-                        <h4 class="font-bold text-white mb-1 leading-tight">${item.name}</h4>
-                        <span class="text-brand font-black">₹${item.price * item.qty}</span>
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <h4>${item.name}</h4>
+                        <span class="item-price">₹${item.price * item.qty}</span>
                     </div>
-                    <div class="flex items-center bg-panel rounded-xl border border-cardBorder p-1">
-                        <button onclick="changeQty(${item.id}, -1)" class="text-slate-400 hover:text-white hover:bg-darkbg w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-minus text-xs"></i></button>
-                        <span class="text-sm font-bold w-6 text-center text-white">${item.qty}</span>
-                        <button onclick="changeQty(${item.id}, 1)" class="text-brand hover:text-white hover:bg-brand/20 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-plus text-xs"></i></button>
+                    <div class="qty-controls">
+                        <button onclick="changeQty(${item.id}, -1)" class="qty-btn minus"><i class="fas fa-minus"></i></button>
+                        <span class="qty-count">${item.qty}</span>
+                        <button onclick="changeQty(${item.id}, 1)" class="qty-btn"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
             `).join('');
@@ -438,45 +997,50 @@
         }
 
         function toggleCart() {
-            document.getElementById('cart-modal').classList.toggle('hidden');
-            document.getElementById('checkout-form').classList.add('hidden');
-            document.getElementById('cart-items').classList.remove('hidden');
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('open');
+            document.getElementById('checkout-form').classList.remove('visible');
+            document.getElementById('cart-items').style.display = '';
             document.getElementById('btn-proceed').classList.remove('hidden');
-            document.getElementById('btn-confirm').classList.add('hidden');
-            document.body.style.overflow = document.getElementById('cart-modal').classList.contains('hidden') ? 'auto' : 'hidden';
+            document.getElementById('btn-confirm').classList.remove('visible');
+            document.body.style.overflow = modal.classList.contains('open') ? 'hidden' : 'auto';
         }
 
         function showCheckout() {
-            if(cart.length === 0) return alert("Please add some items to your cart first!");
-            document.getElementById('cart-items').classList.add('hidden');
-            document.getElementById('checkout-form').classList.remove('hidden');
+            if (cart.length === 0) return alert("Please add some items to your cart first!");
+            document.getElementById('cart-items').style.display = 'none';
+            document.getElementById('checkout-form').classList.add('visible');
             document.getElementById('btn-proceed').classList.add('hidden');
-            document.getElementById('btn-confirm').classList.remove('hidden');
+            document.getElementById('btn-confirm').classList.add('visible');
         }
 
-     async function confirmOrder() {
+        async function confirmOrder() {
             const name = document.getElementById('cust-name').value;
             const phone = document.getElementById('cust-phone').value;
-            
-            if(!name || !phone) return alert("Please enter your name and phone number.");
+
+            if (!name || !phone) return alert("Please enter your name and phone number.");
 
             let fullAddress = "Pickup / Dine-In";
-            if(selectedOrderType === 'delivery') {
+            
+            if (selectedOrderType === 'delivery') {
                 const flat = document.getElementById('addr-flat').value;
                 const bldg = document.getElementById('addr-bldg').value;
                 const st = document.getElementById('addr-street').value;
                 const pin = document.getElementById('addr-pin').value;
                 
-                if(!flat || !bldg || !st || !pin) return alert("Please fill in your complete delivery address.");
+                if (!flat || !bldg || !st || !pin) return alert("Please fill in your complete delivery address.");
                 
-                // 🛑 SMART DELIVERY BOUNDARY (KALYAN WEST ONLY)
+                // 🛑 1. STRICT PINCODE FENCE (Only Kalyan West / Khadakpada)
+                const allowedPincodes = ['421301']; 
+                if(!allowedPincodes.includes(pin.trim())) {
+                    return alert("Delivery boundary restricted! 🚫\n\nWe currently only deliver within Kalyan West (Pincode 421301). Please choose Pickup / Dine-In!");
+                }
+
+                // 🛑 2. SNEAKY KEYWORD BLOCKER (Catches people from East/Shahad using West pincodes)
                 const addressCheck = `${flat} ${bldg} ${st}`.toLowerCase();
-                const blockedPincodes = ['421306', '421103']; // Kalyan East & Shahad
-                
                 const isBlockedArea = addressCheck.includes('east') || 
                                       addressCheck.includes('(e)') || 
-                                      addressCheck.includes('shahad') ||
-                                      blockedPincodes.includes(pin.trim());
+                                      addressCheck.includes('shahad');
 
                 if(isBlockedArea) {
                     return alert("We don't deliver here! 🚫\n\nUnfortunately, we do not deliver to Kalyan East or Shahad at this time. Please contact the shop for further assistance or switch to Pickup/Dine-In.");
@@ -488,7 +1052,7 @@
             const paymentMethod = selectedOrderType === 'dine_in' ? 'Cash on Visit' : 'Cash/UPI on Delivery';
             const btn = document.getElementById('btn-confirm');
             const originalText = btn.innerHTML;
-            btn.innerHTML = "<i class='fas fa-spinner fa-spin mr-2'></i> Processing...";
+            btn.innerHTML = "<i class='fas fa-spinner fa-spin' style='margin-right:8px'></i> Processing...";
             btn.disabled = true;
 
             const orderId = Math.random().toString(36).substr(2, 6).toUpperCase();
@@ -516,7 +1080,7 @@
                 updateCartUI();
                 toggleCart();
                 checkActiveOrder();
-                
+
             } catch (error) {
                 console.error("Error writing document: ", error);
                 alert("Failed to place order. Please try again.");
@@ -524,3 +1088,8 @@
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
+
+        renderMenu();
+    </script>
+</body>
+</html>
