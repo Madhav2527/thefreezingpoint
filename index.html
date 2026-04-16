@@ -517,6 +517,12 @@
         .form-row-2 { grid-template-columns: 1fr 1fr; }
         .form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
 
+        /* Loyalty Message Box */
+        .loyalty-msg {
+            font-size: 12px; font-weight: 700; color: var(--neon-cyan);
+            margin-top: -2px; margin-bottom: 10px; padding-left: 4px;
+        }
+
         .payment-option {
             display: flex; align-items: center; justify-content: center; gap: 8px;
             padding: 14px; border-radius: 14px;
@@ -708,7 +714,8 @@
                     <div class="checkout-section">
                         <p class="section-label"><i class="fas fa-user"></i> 2. Details</p>
                         <input type="text" id="cust-name" placeholder="Full Name" class="form-input">
-                        <input type="tel" id="cust-phone" placeholder="Phone Number" class="form-input">
+                        <input type="tel" id="cust-phone" placeholder="Phone Number" class="form-input" onblur="checkLoyaltyDiscount()">
+                        <div id="loyalty-msg" class="loyalty-msg"></div>
                     </div>
 
                     <div id="address-section" class="checkout-section address-section">
@@ -829,6 +836,7 @@
         let cart = [];
         let currentFilter = 'All';
         let activeCoupon = null;
+        let loyaltyDiscountPercentage = 0; 
         let discountApplied = 0;
         let selectedOrderType = 'dine_in';
 
@@ -868,6 +876,7 @@
                 activeCoupon = null;
                 banner.classList.remove('visible');
             }
+            updateCartUI();
         });
 
         // LIVE TRACKING
@@ -890,6 +899,57 @@
             }
         }
         checkActiveOrder();
+
+        // 🏆 LOYALTY TRACKER (Fires when they type phone number)
+        async function checkLoyaltyDiscount() {
+            const phone = document.getElementById('cust-phone').value.trim();
+            const loyaltyMsg = document.getElementById('loyalty-msg');
+            
+            // Need at least 10 digits to query
+            if(phone.length < 10) {
+                loyaltyDiscountPercentage = 0;
+                loyaltyMsg.innerHTML = "";
+                updateCartUI();
+                return;
+            }
+
+            loyaltyMsg.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Checking loyalty status...";
+            
+            try {
+                // Fetch all orders from this phone number
+                const snapshot = await db.collection("orders").where("phone", "==", phone).get();
+                
+                let weekCount = 0;
+                let monthCount = 0;
+                
+                const now = new Date();
+                const oneWeekAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+                const oneMonthAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if(data.timestamp) {
+                        const orderDate = data.timestamp.toDate();
+                        if(orderDate >= oneWeekAgo) weekCount++;
+                        if(orderDate >= oneMonthAgo) monthCount++;
+                    }
+                });
+
+                // Rule: >2 in a week OR >3 in a month gets 15% discount
+                if(weekCount >= 2 || monthCount >= 3) {
+                    loyaltyDiscountPercentage = 15;
+                    loyaltyMsg.innerHTML = `<i class="fas fa-gem" style="color: var(--neon-pink)"></i> Awesome! Loyalty Unlocked: 15% OFF applied!`;
+                } else {
+                    loyaltyDiscountPercentage = 0;
+                    loyaltyMsg.innerHTML = ``;
+                }
+                updateCartUI();
+
+            } catch (error) {
+                console.error("Loyalty check failed", error);
+                loyaltyMsg.innerHTML = "";
+            }
+        }
 
         function renderMenu() {
             const grid = document.getElementById('menu-grid');
@@ -946,12 +1006,16 @@
 
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-            // Auto apply active coupon if it exists
+            // 🏆 Determine the best discount (Coupon vs Loyalty)
+            let bestDiscountPercent = 0;
             if (activeCoupon) {
-                discountApplied = Math.floor(subtotal * (activeCoupon.discount / 100));
-            } else {
-                discountApplied = 0;
+                bestDiscountPercent = activeCoupon.discount;
             }
+            if (loyaltyDiscountPercentage > bestDiscountPercent) {
+                bestDiscountPercent = loyaltyDiscountPercentage;
+            }
+
+            discountApplied = Math.floor(subtotal * (bestDiscountPercent / 100));
 
             const finalTotal = subtotal - discountApplied;
             document.getElementById('cart-total').innerText = finalTotal > 0 ? finalTotal : 0;
