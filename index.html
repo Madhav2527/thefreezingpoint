@@ -454,7 +454,7 @@
             document.getElementById('btn-confirm').classList.remove('hidden');
         }
 
-        async function confirmOrder() {
+     async function confirmOrder() {
             const name = document.getElementById('cust-name').value;
             const phone = document.getElementById('cust-phone').value;
             
@@ -466,7 +466,22 @@
                 const bldg = document.getElementById('addr-bldg').value;
                 const st = document.getElementById('addr-street').value;
                 const pin = document.getElementById('addr-pin').value;
+                
                 if(!flat || !bldg || !st || !pin) return alert("Please fill in your complete delivery address.");
+                
+                // 🛑 SMART DELIVERY BOUNDARY (KALYAN WEST ONLY)
+                const addressCheck = `${flat} ${bldg} ${st}`.toLowerCase();
+                const blockedPincodes = ['421306', '421103']; // Kalyan East & Shahad
+                
+                const isBlockedArea = addressCheck.includes('east') || 
+                                      addressCheck.includes('(e)') || 
+                                      addressCheck.includes('shahad') ||
+                                      blockedPincodes.includes(pin.trim());
+
+                if(isBlockedArea) {
+                    return alert("We don't deliver here! 🚫\n\nUnfortunately, we do not deliver to Kalyan East or Shahad at this time. Please contact the shop for further assistance or switch to Pickup/Dine-In.");
+                }
+
                 fullAddress = `${flat}, ${bldg}, ${st}, Kalyan, MH - ${pin}`;
             }
 
@@ -509,8 +524,3 @@
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
-
-        renderMenu();
-    </script>
-</body>
-</html>
