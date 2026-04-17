@@ -7,6 +7,9 @@
     <meta name="description" content="The Freezing Point – Kalyan's favourite spot for Mastani, Thick Shakes, Falooda & Cold Coffee. Order online now!">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <style>
@@ -517,7 +520,6 @@
         .form-row-2 { grid-template-columns: 1fr 1fr; }
         .form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
 
-        /* Loyalty Message Box */
         .loyalty-msg {
             font-size: 12px; font-weight: 700; color: var(--neon-cyan);
             margin-top: -2px; margin-bottom: 10px; padding-left: 4px;
@@ -649,7 +651,6 @@
     </header>
 
     <main class="main-content">
-
         <div id="live-coupon-banner" class="coupon-banner">
             <div class="coupon-inner">
                 <div>
@@ -782,7 +783,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // FULL 47-ITEM MENU
+        // MENU DATA
         const products = [
             { id: 101, name: "Vanilla Mastani", price: 160, category: "Mastani" },
             { id: 102, name: "Chocolate Mastani", price: 180, category: "Mastani" },
@@ -836,11 +837,10 @@
         let cart = [];
         let currentFilter = 'All';
         let activeCoupon = null;
-        let loyaltyDiscountPercentage = 0; 
+        let loyaltyDiscountPercentage = 0;
         let discountApplied = 0;
         let selectedOrderType = 'dine_in';
 
-        // ORDER TYPE UI LOGIC
         function setOrderType(type) {
             selectedOrderType = type;
             const btnDine = document.getElementById('type-dinein');
@@ -864,7 +864,6 @@
             }
         }
 
-        // LISTEN TO ADMIN COUPONS
         db.collection("settings").doc("coupon").onSnapshot((doc) => {
             const banner = document.getElementById('live-coupon-banner');
             if (doc.exists && doc.data().isActive) {
@@ -879,7 +878,7 @@
             updateCartUI();
         });
 
-        // LIVE TRACKING
+        // LIVE TRACKER: Will now display the pre-calculated Google Maps ETA instantly
         function checkActiveOrder() {
             const activeOrderId = localStorage.getItem('fp_active_order');
             if (activeOrderId) {
@@ -890,7 +889,7 @@
                         const data = doc.data();
                         const statusTxt = document.getElementById('nav-tracking-status');
 
-                        if (data.status === 'PENDING') { statusTxt.innerHTML = "Order Sent to Kitchen"; }
+                        if (data.status === 'PENDING') { statusTxt.innerHTML = `Order Sent (Est: ${data.eta}m)`; }
                         else if (data.status === 'PREPARING') { statusTxt.innerHTML = `<span style="color:var(--neon-yellow)"><i class="fas fa-fire" style="margin-right:4px"></i>Cooking (${data.eta}m)</span>`; }
                         else if (data.status === 'READY') { statusTxt.innerHTML = `<span style="color:#4caf50"><i class="fas fa-check-circle" style="margin-right:4px"></i>Ready for Pickup</span>`; }
                         else if (data.status === 'OUT_FOR_DELIVERY') { statusTxt.innerHTML = `<span style="color:var(--neon-cyan)"><i class="fas fa-motorcycle" style="margin-right:4px"></i>Out for Delivery</span>`; }
@@ -900,12 +899,10 @@
         }
         checkActiveOrder();
 
-        // 🏆 LOYALTY TRACKER (Fires when they type phone number)
         async function checkLoyaltyDiscount() {
             const phone = document.getElementById('cust-phone').value.trim();
             const loyaltyMsg = document.getElementById('loyalty-msg');
             
-            // Need at least 10 digits to query
             if(phone.length < 10) {
                 loyaltyDiscountPercentage = 0;
                 loyaltyMsg.innerHTML = "";
@@ -916,12 +913,8 @@
             loyaltyMsg.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Checking loyalty status...";
             
             try {
-                // Fetch all orders from this phone number
                 const snapshot = await db.collection("orders").where("phone", "==", phone).get();
-                
-                let weekCount = 0;
-                let monthCount = 0;
-                
+                let weekCount = 0; let monthCount = 0;
                 const now = new Date();
                 const oneWeekAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
                 const oneMonthAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
@@ -935,7 +928,6 @@
                     }
                 });
 
-                // Rule: >2 in a week OR >3 in a month gets 15% discount
                 if(weekCount >= 2 || monthCount >= 3) {
                     loyaltyDiscountPercentage = 15;
                     loyaltyMsg.innerHTML = `<i class="fas fa-gem" style="color: var(--neon-pink)"></i> Awesome! Loyalty Unlocked: 15% OFF applied!`;
@@ -944,7 +936,6 @@
                     loyaltyMsg.innerHTML = ``;
                 }
                 updateCartUI();
-
             } catch (error) {
                 console.error("Loyalty check failed", error);
                 loyaltyMsg.innerHTML = "";
@@ -1006,14 +997,9 @@
 
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-            // 🏆 Determine the best discount (Coupon vs Loyalty)
             let bestDiscountPercent = 0;
-            if (activeCoupon) {
-                bestDiscountPercent = activeCoupon.discount;
-            }
-            if (loyaltyDiscountPercentage > bestDiscountPercent) {
-                bestDiscountPercent = loyaltyDiscountPercentage;
-            }
+            if (activeCoupon) bestDiscountPercent = activeCoupon.discount;
+            if (loyaltyDiscountPercentage > bestDiscountPercent) bestDiscountPercent = loyaltyDiscountPercentage;
 
             discountApplied = Math.floor(subtotal * (bestDiscountPercent / 100));
 
@@ -1074,86 +1060,4 @@
             if (cart.length === 0) return alert("Please add some items to your cart first!");
             document.getElementById('cart-items').style.display = 'none';
             document.getElementById('checkout-form').classList.add('visible');
-            document.getElementById('btn-proceed').classList.add('hidden');
-            document.getElementById('btn-confirm').classList.add('visible');
-        }
-
-        async function confirmOrder() {
-            const name = document.getElementById('cust-name').value;
-            const phone = document.getElementById('cust-phone').value;
-
-            if (!name || !phone) return alert("Please enter your name and phone number.");
-
-            let fullAddress = "Pickup / Dine-In";
-            
-            if (selectedOrderType === 'delivery') {
-                const flat = document.getElementById('addr-flat').value;
-                const bldg = document.getElementById('addr-bldg').value;
-                const st = document.getElementById('addr-street').value;
-                const pin = document.getElementById('addr-pin').value;
-                
-                if (!flat || !bldg || !st || !pin) return alert("Please fill in your complete delivery address.");
-                
-                // 🛑 1. STRICT PINCODE FENCE (Only Kalyan West / Khadakpada)
-                const allowedPincodes = ['421301']; 
-                if(!allowedPincodes.includes(pin.trim())) {
-                    return alert("Delivery boundary restricted! 🚫\n\nWe currently only deliver within Kalyan West (Pincode 421301). Please choose Pickup / Dine-In!");
-                }
-
-                // 🛑 2. SNEAKY KEYWORD BLOCKER (Catches people from East/Shahad using West pincodes)
-                const addressCheck = `${flat} ${bldg} ${st}`.toLowerCase();
-                const isBlockedArea = addressCheck.includes('east') || 
-                                      addressCheck.includes('(e)') || 
-                                      addressCheck.includes('shahad');
-
-                if(isBlockedArea) {
-                    return alert("We don't deliver here! 🚫\n\nUnfortunately, we do not deliver to Kalyan East or Shahad at this time. Please contact the shop for further assistance or switch to Pickup/Dine-In.");
-                }
-
-                fullAddress = `${flat}, ${bldg}, ${st}, Kalyan, MH - ${pin}`;
-            }
-
-            const paymentMethod = selectedOrderType === 'dine_in' ? 'Cash on Visit' : 'Cash/UPI on Delivery';
-            const btn = document.getElementById('btn-confirm');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "<i class='fas fa-spinner fa-spin' style='margin-right:8px'></i> Processing...";
-            btn.disabled = true;
-
-            const orderId = Math.random().toString(36).substr(2, 6).toUpperCase();
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-
-            try {
-                await db.collection("orders").doc(orderId).set({
-                    id: orderId,
-                    customer: name,
-                    phone: phone,
-                    orderType: selectedOrderType,
-                    address: fullAddress,
-                    payment: paymentMethod,
-                    items: cart.map(i => `${i.qty}x ${i.name}`).join(', '),
-                    total: subtotal - discountApplied,
-                    status: 'PENDING',
-                    eta: '--',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                localStorage.setItem('fp_active_order', orderId);
-
-                alert(`Success! Order #${orderId} confirmed. Watch the tracker at the top of the screen!`);
-                cart = [];
-                updateCartUI();
-                toggleCart();
-                checkActiveOrder();
-
-            } catch (error) {
-                console.error("Error writing document: ", error);
-                alert("Failed to place order. Please try again.");
-            }
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-
-        renderMenu();
-    </script>
-</body>
-</html>
+            document.getElementById('btn-
