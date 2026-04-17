@@ -10,17 +10,46 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <script>tailwind.config = { theme: { extend: { colors: { brand: '#e11d48', darkbg: '#09090b', panel: '#18181b' } } } }</script>
 </head>
-<body class="bg-darkbg text-white font-sans antialiased p-6 pb-20 selection:bg-brand selection:text-white">
+<body class="bg-darkbg text-white font-sans antialiased selection:bg-brand selection:text-white min-h-screen">
 
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div id="login-overlay" class="fixed inset-0 z-50 bg-darkbg flex flex-col items-center justify-center p-4">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand/20 rounded-full blur-[120px] pointer-events-none"></div>
+        
+        <div class="relative z-10 bg-panel border border-zinc-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            <div class="w-16 h-16 bg-darkbg border border-zinc-700 rounded-2xl flex items-center justify-center text-brand text-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(225,29,72,0.3)]">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2">Admin Portal</h2>
+            <p class="text-gray-400 text-sm mb-8">Enter your credentials to access the command center.</p>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1 block">Admin ID</label>
+                    <input type="text" id="login-id" class="w-full bg-darkbg border border-zinc-800 rounded-xl px-4 py-3 text-white focus:border-brand outline-none transition-colors" placeholder="Enter ID">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1 block">Password</label>
+                    <input type="password" id="login-pass" class="w-full bg-darkbg border border-zinc-800 rounded-xl px-4 py-3 text-white focus:border-brand outline-none transition-colors" placeholder="••••••••">
+                </div>
+                <button onclick="attemptLogin()" class="w-full bg-brand hover:bg-rose-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand/20 transition-all mt-4 flex justify-center items-center gap-2">
+                    Access Dashboard <i class="fas fa-arrow-right text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-content" class="hidden max-w-7xl mx-auto space-y-6 p-6 pb-20">
         
         <div class="flex justify-between items-center bg-panel p-6 rounded-2xl border border-zinc-800 shadow-lg">
             <div>
-                <h1 class="text-3xl font-extrabold flex items-center gap-3"><i class="fas fa-satellite-dish text-brand"></i> Order Command Center</h1>
+                <h1 class="text-3xl font-extrabold flex items-center gap-3"><i class="fas fa-satellite-dish text-brand"></i> Command Center</h1>
                 <p class="text-green-500 text-sm flex items-center gap-2 mt-1 font-bold tracking-wide">
                     <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span> LIVE SYNC ACTIVE
                 </p>
             </div>
+            <button onclick="logoutAdmin()" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-gray-300 px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2">
+                <i class="fas fa-sign-out-alt"></i> Lock Portal
+            </button>
         </div>
 
         <div class="bg-panel border border-zinc-800 rounded-2xl p-6 shadow-lg relative overflow-hidden">
@@ -79,155 +108,185 @@
     </div>
 
     <script>
-        // FIREBASE INIT
-        const firebaseConfig = {
-            apiKey: "AIzaSyBI4yw5_LCfrPqVZSMqKlvxhzjOT-Ym18I",
-            authDomain: "freezingpoint-ba86d.firebaseapp.com",
-            projectId: "freezingpoint-ba86d",
-            storageBucket: "freezingpoint-ba86d.firebasestorage.app",
-            messagingSenderId: "70138777670",
-            appId: "1:70138777670:web:610674abe5efa20c46fa47"
+        // --- 1. SECURITY SYSTEM ---
+        
+        // Change your Admin ID and Password right here! 👇
+        const ADMIN_CREDENTIALS = {
+            id: "admin",
+            password: "freeze2024"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
 
-        // --- COUPON MANAGEMENT ---
-        const couponRef = db.collection("settings").doc("coupon");
+        function attemptLogin() {
+            const inputId = document.getElementById('login-id').value;
+            const inputPass = document.getElementById('login-pass').value;
 
-        // Listen for current coupon status to update the Admin UI
-        couponRef.onSnapshot((doc) => {
-            const statusText = document.getElementById('coupon-status');
-            const btnPush = document.getElementById('btn-push-coupon');
-            const btnStop = document.getElementById('btn-stop-coupon');
-            const codeInput = document.getElementById('coupon-code');
-            const discountInput = document.getElementById('coupon-discount');
-
-            if (doc.exists && doc.data().isActive) {
-                const data = doc.data();
-                codeInput.value = data.code;
-                discountInput.value = data.discount;
-                codeInput.disabled = true;
-                discountInput.disabled = true;
-                
-                btnPush.classList.add('hidden');
-                btnStop.classList.remove('hidden');
-                
-                statusText.innerHTML = `<span class="text-green-400 font-bold flex items-center gap-1"><i class="fas fa-broadcast-tower animate-pulse"></i> LIVE:</span> <span class="text-white ml-1 font-bold">${data.code}</span> is active, giving ${data.discount}% off to all customers.`;
-                statusText.classList.replace('text-gray-400', 'text-green-500/80');
+            if(inputId === ADMIN_CREDENTIALS.id && inputPass === ADMIN_CREDENTIALS.password) {
+                // Save session so it remembers them until the tab is closed
+                sessionStorage.setItem('fp_admin_unlocked', 'true');
+                unlockDashboard();
             } else {
-                codeInput.disabled = false;
-                discountInput.disabled = false;
-                
-                btnPush.classList.remove('hidden');
-                btnStop.classList.add('hidden');
-                
-                statusText.innerHTML = `<i class="fas fa-info-circle"></i> No active coupon currently running.`;
-                statusText.classList.replace('text-green-500/80', 'text-gray-400');
+                alert("Access Denied: Incorrect ID or Password.");
+                document.getElementById('login-pass').value = '';
             }
+        }
+
+        function unlockDashboard() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('dashboard-content').classList.remove('hidden');
+            // ONLY connect to the database AFTER successful login
+            initializeFirebaseAndListeners();
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('fp_admin_unlocked');
+            location.reload(); // Instantly refreshes to lock the page
+        }
+
+        // Check if already logged in when the tab opens
+        if(sessionStorage.getItem('fp_admin_unlocked') === 'true') {
+            unlockDashboard();
+        }
+
+        // Allow pressing "Enter" on the password field to login
+        document.getElementById('login-pass').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') attemptLogin();
         });
+
+
+        // --- 2. FIREBASE & DASHBOARD ENGINE (Wrapped in a function) ---
+        let db; 
+        let couponRef;
+
+        function initializeFirebaseAndListeners() {
+            const firebaseConfig = {
+                apiKey: "AIzaSyBI4yw5_LCfrPqVZSMqKlvxhzjOT-Ym18I",
+                authDomain: "freezingpoint-ba86d.firebaseapp.com",
+                projectId: "freezingpoint-ba86d",
+                storageBucket: "freezingpoint-ba86d.firebasestorage.app",
+                messagingSenderId: "70138777670",
+                appId: "1:70138777670:web:610674abe5efa20c46fa47"
+            };
+            
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.firestore();
+            couponRef = db.collection("settings").doc("coupon");
+
+            // Start Coupon Listener
+            couponRef.onSnapshot((doc) => {
+                const statusText = document.getElementById('coupon-status');
+                const btnPush = document.getElementById('btn-push-coupon');
+                const btnStop = document.getElementById('btn-stop-coupon');
+                const codeInput = document.getElementById('coupon-code');
+                const discountInput = document.getElementById('coupon-discount');
+
+                if (doc.exists && doc.data().isActive) {
+                    const data = doc.data();
+                    codeInput.value = data.code;
+                    discountInput.value = data.discount;
+                    codeInput.disabled = true;
+                    discountInput.disabled = true;
+                    
+                    btnPush.classList.add('hidden');
+                    btnStop.classList.remove('hidden');
+                    
+                    statusText.innerHTML = `<span class="text-green-400 font-bold flex items-center gap-1"><i class="fas fa-broadcast-tower animate-pulse"></i> LIVE:</span> <span class="text-white ml-1 font-bold">${data.code}</span> is active, giving ${data.discount}% off.`;
+                    statusText.classList.replace('text-gray-400', 'text-green-500/80');
+                } else {
+                    codeInput.disabled = false;
+                    discountInput.disabled = false;
+                    
+                    btnPush.classList.remove('hidden');
+                    btnStop.classList.add('hidden');
+                    
+                    statusText.innerHTML = `<i class="fas fa-info-circle"></i> No active coupon currently running.`;
+                    statusText.classList.replace('text-green-500/80', 'text-gray-400');
+                }
+            });
+
+            // Start Orders Listener
+            db.collection("orders").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                const list = document.getElementById('orders-list');
+                if(snapshot.empty) {
+                    list.innerHTML = `<tr><td colspan="6" class="p-16 text-center text-gray-500 font-bold"><i class="fas fa-bed text-5xl mb-4 opacity-20 block"></i> No active orders right now. Waiting for customers...</td></tr>`;
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach((doc) => {
+                    const order = doc.data();
+                    
+                    let typeBadge = order.orderType === 'delivery' 
+                        ? `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-motorcycle mr-1"></i> Delivery</span>`
+                        : `<span class="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-store mr-1"></i> Dine-In</span>`;
+                    
+                    let statusBadge = '';
+                    if(order.status === 'PENDING') statusBadge = '<span class="text-red-400 font-bold bg-red-400/10 px-3 py-1 rounded-full text-xs border border-red-400/20"><i class="fas fa-circle text-[8px] mr-1 animate-pulse"></i> Needs Action</span>';
+                    if(order.status === 'PREPARING') statusBadge = `<span class="text-yellow-400 font-bold bg-yellow-400/10 px-3 py-1 rounded-full text-xs border border-yellow-400/20"><i class="fas fa-fire mr-1"></i> Cooking (${order.eta}m)</span>`;
+                    if(order.status === 'READY') statusBadge = '<span class="text-green-400 font-bold bg-green-400/10 px-3 py-1 rounded-full text-xs border border-green-400/20"><i class="fas fa-check-circle mr-1"></i> Ready for Pickup</span>';
+                    if(order.status === 'OUT_FOR_DELIVERY') statusBadge = '<span class="text-blue-400 font-bold bg-blue-400/10 px-3 py-1 rounded-full text-xs border border-blue-400/20"><i class="fas fa-route mr-1"></i> Out for Delivery</span>';
+
+                    let actionBtn = '';
+                    if(order.status === 'PENDING') {
+                        actionBtn = `<button onclick="acceptOrder('${doc.id}')" class="bg-brand hover:bg-rose-600 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-lg shadow-brand/20 transition w-full"><i class="fas fa-bell mr-1"></i> Accept & Set ETA</button>`;
+                    } else if(order.status === 'PREPARING') {
+                        if(order.orderType === 'delivery') {
+                            actionBtn = `<button onclick="dispatchDelivery('${doc.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-lg shadow-blue-600/20 transition w-full"><i class="fas fa-motorcycle mr-1"></i> Dispatch Delivery</button>`;
+                        } else {
+                            actionBtn = `<button onclick="markReady('${doc.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-lg shadow-green-600/20 transition w-full"><i class="fas fa-check mr-1"></i> Mark as Ready</button>`;
+                        }
+                    } else {
+                        actionBtn = `<p class="text-xs text-gray-500 text-center font-bold bg-zinc-800 py-2 rounded-lg border border-zinc-700">Order Complete</p>`;
+                    }
+
+                    html += `
+                        <tr class="hover:bg-zinc-800/40 transition border-b border-zinc-800/50 group">
+                            <td class="p-4">
+                                <p class="font-mono text-sm font-bold text-white group-hover:text-brand transition-colors">#${order.id}</p>
+                                <p class="text-[11px] text-gray-500 mt-1 uppercase tracking-wider">${new Date(order.timestamp?.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                            </td>
+                            <td class="p-4">
+                                <p class="font-bold text-white text-sm mb-2">${order.customer} <span class="text-gray-400 font-normal text-xs ml-1">(${order.phone})</span></p>
+                                ${typeBadge}
+                                ${order.orderType === 'delivery' ? `<p class="text-xs text-gray-400 mt-3 max-w-[220px] bg-darkbg p-2.5 rounded-lg border border-zinc-700 leading-relaxed"><i class="fas fa-map-marker-alt text-brand mr-1"></i> ${order.address}</p>` : ''}
+                            </td>
+                            <td class="p-4 text-sm text-gray-300 max-w-[220px] leading-relaxed font-medium">${order.items}</td>
+                            <td class="p-4">
+                                <p class="font-black text-white text-lg">₹${order.total}</p>
+                                <p class="text-[10px] text-gray-400 uppercase tracking-wider mt-1 font-bold">${order.payment}</p>
+                            </td>
+                            <td class="p-4">${statusBadge}</td>
+                            <td class="p-4 min-w-[170px]">${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+                list.innerHTML = html;
+            });
+        }
 
         window.pushCoupon = async function() {
             const code = document.getElementById('coupon-code').value.toUpperCase().trim();
             const discount = document.getElementById('coupon-discount').value;
-            
             if(!code || !discount) return alert("Please enter both a Coupon Code and a Discount Percentage!");
-
             try {
-                await couponRef.set({
-                    code: code,
-                    discount: parseInt(discount),
-                    isActive: true,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch (error) {
-                console.error("Error pushing coupon:", error);
-                alert("Failed to push coupon. Check console.");
-            }
+                await couponRef.set({ code: code, discount: parseInt(discount), isActive: true, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+            } catch (error) { console.error("Error pushing coupon:", error); }
         };
 
         window.stopCoupon = async function() {
             try {
-                await couponRef.update({
-                    isActive: false
-                });
+                await couponRef.update({ isActive: false });
                 document.getElementById('coupon-code').value = '';
                 document.getElementById('coupon-discount').value = '';
-            } catch (error) {
-                console.error("Error stopping coupon:", error);
-            }
+            } catch (error) { console.error("Error stopping coupon:", error); }
         };
 
-        // --- ORDER MANAGEMENT ---
-        db.collection("orders").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-            const list = document.getElementById('orders-list');
-            if(snapshot.empty) {
-                list.innerHTML = `<tr><td colspan="6" class="p-16 text-center text-gray-500 font-bold"><i class="fas fa-bed text-5xl mb-4 opacity-20 block"></i> No active orders right now. Waiting for customers...</td></tr>`;
-                return;
-            }
-
-            let html = '';
-            snapshot.forEach((doc) => {
-                const order = doc.data();
-                
-                let typeBadge = order.orderType === 'delivery' 
-                    ? `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-motorcycle mr-1"></i> Delivery</span>`
-                    : `<span class="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-store mr-1"></i> Dine-In</span>`;
-                
-                let statusBadge = '';
-                if(order.status === 'PENDING') statusBadge = '<span class="text-red-400 font-bold bg-red-400/10 px-3 py-1 rounded-full text-xs border border-red-400/20"><i class="fas fa-circle text-[8px] mr-1 animate-pulse"></i> Needs Action</span>';
-                if(order.status === 'PREPARING') statusBadge = `<span class="text-yellow-400 font-bold bg-yellow-400/10 px-3 py-1 rounded-full text-xs border border-yellow-400/20"><i class="fas fa-fire mr-1"></i> Cooking (${order.eta}m)</span>`;
-                if(order.status === 'READY') statusBadge = '<span class="text-green-400 font-bold bg-green-400/10 px-3 py-1 rounded-full text-xs border border-green-400/20"><i class="fas fa-check-circle mr-1"></i> Ready for Pickup</span>';
-                if(order.status === 'OUT_FOR_DELIVERY') statusBadge = '<span class="text-blue-400 font-bold bg-blue-400/10 px-3 py-1 rounded-full text-xs border border-blue-400/20"><i class="fas fa-route mr-1"></i> Out for Delivery</span>';
-
-                let actionBtn = '';
-                if(order.status === 'PENDING') {
-                    actionBtn = `<button onclick="acceptOrder('${doc.id}')" class="bg-brand hover:bg-rose-600 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-lg shadow-brand/20 transition w-full"><i class="fas fa-bell mr-1"></i> Accept & Set ETA</button>`;
-                } else if(order.status === 'PREPARING') {
-                    if(order.orderType === 'delivery') {
-                        actionBtn = `<button onclick="dispatchDelivery('${doc.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-lg shadow-blue-600/20 transition w-full"><i class="fas fa-motorcycle mr-1"></i> Dispatch Delivery</button>`;
-                    } else {
-                        actionBtn = `<button onclick="markReady('${doc.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-lg shadow-green-600/20 transition w-full"><i class="fas fa-check mr-1"></i> Mark as Ready</button>`;
-                    }
-                } else {
-                    actionBtn = `<p class="text-xs text-gray-500 text-center font-bold bg-zinc-800 py-2 rounded-lg border border-zinc-700">Order Complete</p>`;
-                }
-
-                html += `
-                    <tr class="hover:bg-zinc-800/40 transition border-b border-zinc-800/50 group">
-                        <td class="p-4">
-                            <p class="font-mono text-sm font-bold text-white group-hover:text-brand transition-colors">#${order.id}</p>
-                            <p class="text-[11px] text-gray-500 mt-1 uppercase tracking-wider">${new Date(order.timestamp?.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                        </td>
-                        <td class="p-4">
-                            <p class="font-bold text-white text-sm mb-2">${order.customer} <span class="text-gray-400 font-normal text-xs ml-1">(${order.phone})</span></p>
-                            ${typeBadge}
-                            ${order.orderType === 'delivery' ? `<p class="text-xs text-gray-400 mt-3 max-w-[220px] bg-darkbg p-2.5 rounded-lg border border-zinc-700 leading-relaxed"><i class="fas fa-map-marker-alt text-brand mr-1"></i> ${order.address}</p>` : ''}
-                        </td>
-                        <td class="p-4 text-sm text-gray-300 max-w-[220px] leading-relaxed font-medium">${order.items}</td>
-                        <td class="p-4">
-                            <p class="font-black text-white text-lg">₹${order.total}</p>
-                            <p class="text-[10px] text-gray-400 uppercase tracking-wider mt-1 font-bold">${order.payment}</p>
-                        </td>
-                        <td class="p-4">${statusBadge}</td>
-                        <td class="p-4 min-w-[170px]">${actionBtn}</td>
-                    </tr>
-                `;
-            });
-            list.innerHTML = html;
-        });
-
-        // ACTION: ACCEPT & SET ETA
         window.acceptOrder = async function(docId) {
             const time = prompt("How many minutes will this order take? (e.g. 15, 30, 45)");
-            if(time) {
-                await db.collection("orders").doc(docId).update({ 
-                    status: 'PREPARING',
-                    eta: time
-                });
-            }
+            if(time) await db.collection("orders").doc(docId).update({ status: 'PREPARING', eta: time });
         };
 
-        // ACTION: DINE-IN READY
         window.markReady = async function(docId) {
             await db.collection("orders").doc(docId).update({ status: 'READY' });
             const doc = await db.collection("orders").doc(docId).get();
@@ -236,7 +295,6 @@
             window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(message)}`, '_blank');
         };
 
-        // ACTION: DELIVERY DISPATCHED
         window.dispatchDelivery = async function(docId) {
             await db.collection("orders").doc(docId).update({ status: 'OUT_FOR_DELIVERY' });
             const doc = await db.collection("orders").doc(docId).get();
@@ -244,7 +302,6 @@
             const message = `Hi ${doc.data().customer}! Your order (#${doc.data().id}) is OUT FOR DELIVERY! 🏍️ Have your ₹${doc.data().total} ready (${doc.data().payment}). Enjoy your dessert!`;
             window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(message)}`, '_blank');
         };
-
     </script>
 </body>
 </html>
